@@ -1,4 +1,4 @@
-import { MOVE_PIECE, SELECT_SQUARE } from './chessActionsTypes';
+import { MOVE_PIECE, PROMOTE_PAWN, SELECT_SQUARE } from './chessActionsTypes';
 
 export const selectSquare = (idx: number) => {
   return {
@@ -11,5 +11,16 @@ export const movePiece = (idx: number) => {
   return {
     type: MOVE_PIECE,
     payload: idx,
+  };
+};
+
+export const promotePawn = (info: {
+  from: string;
+  to: string;
+  promotion: string;
+}) => {
+  return {
+    type: PROMOTE_PAWN,
+    payload: info,
   };
 };

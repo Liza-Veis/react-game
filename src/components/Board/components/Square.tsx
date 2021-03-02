@@ -3,14 +3,14 @@ import React from 'react';
 type Props = {
   isDark: boolean;
   children: React.ReactNode;
-  moveTo: () => void;
+  handleClick: () => void;
 };
 
-const Square: React.FC<Props> = ({ children, isDark, moveTo }: Props) => {
+const Square: React.FC<Props> = ({ children, isDark, handleClick }: Props) => {
   const className = `square ${isDark && 'square_dark'}`;
 
   return (
-    <div className={className} onClick={moveTo}>
+    <div className={className} onClick={handleClick}>
       {children}
     </div>
   );
