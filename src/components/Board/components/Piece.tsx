@@ -7,14 +7,16 @@ export type PieceType = {
 
 type Props = {
   piece: PieceType;
+  isSelected: boolean;
 };
 
-const Piece: React.FC<Props> = ({ piece: { type, color } }: Props) => {
+const Piece: React.FC<Props> = ({ piece, isSelected }: Props) => {
+  const { type, color } = piece;
   const title = `${color}${type.toUpperCase()}`;
   const img = `./assets/${title}.png`;
 
   return (
-    <div className="piece">
+    <div className={`piece ${isSelected && 'selected'}`}>
       <img src={img} alt={title} />
     </div>
   );
