@@ -18,8 +18,8 @@ const Piece: React.FC<Props> = ({ piece, isSelected, turn }: Props) => {
 
   return (
     <div
-      className={`piece ${isSelected && 'selected'} ${
-        turn === color && 'interactive'
+      className={`piece ${isSelected ? 'selected' : ''} ${
+        turn === color ? 'interactive' : ''
       }`}
     >
       <img src={img} alt={title} />

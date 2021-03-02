@@ -47,6 +47,17 @@ button {
   font-size: 20px;
 }
 
+.game {
+  position: relative;
+}
+
+.game__btn {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 30px;
+}
+
 .board {
   position: relative;
   width: 600px;
@@ -117,7 +128,6 @@ button {
 .promotion__item {
   padding: 10px;
   background-color: #f0d9b5;
-  cursor: pointer;
 }
 
 .promotion__item img {
@@ -126,4 +136,37 @@ button {
 
 .interactive {
   cursor: pointer;
+}
+
+.settings {
+  color: #8c8484;
+}
+
+.settings__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.settings__title {
+  font-size: 30px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.settings__box span {
+  padding: 0 15px;
+  font-size: 20px;
+}
+
+.settings__box input {
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.settings__btn {
+  position: fixed;
+  top: 40px;
+  right: 60px;
 }

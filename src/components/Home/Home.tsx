@@ -28,17 +28,17 @@ const Home: React.FC<Props> = ({ startNewGame }: Props) => {
       </button>
       <button
         className="btn"
+        onClick={() => handleClick('/settings')}
+        type="button"
+      >
+        Settings
+      </button>
+      <button
+        className="btn"
         onClick={() => handleClick('/statistics')}
         type="button"
       >
         Statistics
-      </button>
-      <button
-        className="btn"
-        onClick={() => handleClick('/settigns')}
-        type="button"
-      >
-        Settings
       </button>
       <button className="btn" onClick={() => handleClick('/')} type="button">
         Hot keys

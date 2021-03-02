@@ -23,7 +23,7 @@ const Promotion: React.FC<Props> = ({
 }: Props) => {
   const promotionPieces = ['q', 'n', 'r', 'b'];
 
-  const doPromotion = (promotion: string) => {
+  const handleClick = (promotion: string) => {
     promote({ from, to, promotion });
   };
 
@@ -37,8 +37,8 @@ const Promotion: React.FC<Props> = ({
             return (
               <div
                 key={idx}
-                className="promotion__item"
-                onClick={() => doPromotion(piece)}
+                className="promotion__item interactive"
+                onClick={() => handleClick(piece)}
               >
                 <img src={`./assets/${title}.png`} alt={title} />
               </div>

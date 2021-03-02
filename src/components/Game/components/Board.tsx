@@ -1,5 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect, useStore } from 'react-redux';
 import { TDispatch, TState } from '../../../redux/types';
 import Square from './Square';
 import Piece, { PieceType } from './Piece';
@@ -23,6 +23,7 @@ const Board: React.FC<Props> = (props: Props) => {
     if (selectedSquare === idx) {
       return;
     }
+
     if (!piece) {
       moveTo(idx);
       return;

@@ -1,12 +1,19 @@
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 import Board from './components/Board';
-import Header from './components/Header';
 
 const Game = () => {
+  const history = useHistory();
+  const handleClick = () => {
+    history.push('/');
+  };
+
   return (
     <div className="game">
-      <Header />
       <Board />
+      <button className="btn game__btn" onClick={handleClick} type="button">
+        Surrender
+      </button>
     </div>
   );
 };

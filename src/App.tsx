@@ -5,6 +5,7 @@ import store from './redux/store';
 import Footer from './components/Footer';
 import Home from './components/Home';
 import Game from './components/Game';
+import Settings from './components/Settings';
 
 const App: React.FC = () => {
   return (
@@ -17,8 +18,10 @@ const App: React.FC = () => {
           <Route path="/game">
             <Game />
           </Route>
+          <Route path="/settings">
+            <Settings />
+          </Route>
           <Route path="/statistics">{/* Statistics */}</Route>
-          <Route path="/settings">{/* Settings */}</Route>
           <Route path="*">{/* Error */}</Route>
         </Switch>
         <Footer />
