@@ -1,11 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { TDispatch, TState } from '../../redux/types';
-import Square from './components/Square';
-import Piece, { PieceType } from './components/Piece';
-import { movePiece, selectSquare } from '../../redux/chessActions';
-import { isDarkSquare } from '../../utils';
-import Promotion from './components/Promotion';
+import { TDispatch, TState } from '../../../redux/types';
+import Square from './Square';
+import Piece, { PieceType } from './Piece';
+import { movePiece, selectSquare } from '../../../redux/chessActions';
+import { isDarkSquare } from '../../../utils';
+import Promotion from './Promotion';
 
 type Props = {
   board: (PieceType | null)[];

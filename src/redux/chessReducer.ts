@@ -1,9 +1,15 @@
 import * as Chess from 'chess.js';
 import { getPosition } from '../utils';
-import { SELECT_SQUARE, MOVE_PIECE, PROMOTE_PAWN } from './chessActionsTypes';
+import {
+  SELECT_SQUARE,
+  MOVE_PIECE,
+  PROMOTE_PAWN,
+  START_GAME,
+} from './chessActionsTypes';
 
 const promotion = 'rnb2bnr/pppPkppp/8/4p3/7q/8/PPPP1PPP/RNBQKBNR w KQ - 1 5';
-const chess = new (Chess as any)(promotion);
+const fen = localStorage.getItem('react-chess-fen');
+const chess = new (Chess as any)(fen || undefined);
 
 const initialState = {
   board: chess.board().flat(),
@@ -14,6 +20,14 @@ const initialState = {
 
 const chessReducer = (state = initialState, action: any) => {
   switch (action.type) {
+    case START_GAME: {
+      chess.reset();
+      localStorage.setItem('react-chess-fen', '');
+      return {
+        ...initialState,
+        board: chess.board().flat(),
+      };
+    }
     case SELECT_SQUARE: {
       return {
         ...state,
@@ -40,7 +54,12 @@ const chessReducer = (state = initialState, action: any) => {
           promotion: { from, to, color },
         };
       }
-      chess.move({ from, to });
+      const isLegal = chess.move({ from, to });
+      if (!isLegal) {
+        return { ...state, selectedSquare: null };
+      }
+
+      localStorage.setItem('react-chess-fen', chess.fen());
 
       return {
         ...state,
@@ -53,6 +72,8 @@ const chessReducer = (state = initialState, action: any) => {
     case PROMOTE_PAWN: {
       const { from, to, promotion: p } = action.payload;
       chess.move({ from, to, promotion: p });
+
+      localStorage.setItem('react-chess-fen', chess.fen());
 
       return {
         ...state,
