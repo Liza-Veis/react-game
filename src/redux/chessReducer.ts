@@ -1,4 +1,5 @@
 import * as Chess from 'chess.js';
+import { generateAIMove } from '../AI/sendMessage';
 import { getPosition, getRandomSide } from '../utils';
 import {
   SELECT_SQUARE,
@@ -7,22 +8,49 @@ import {
   START_GAME,
   SET_VIEW,
   SET_SIDE,
+  SET_MODE,
+  MAKE_AI_MOVE,
 } from './chessActionsTypes';
 
-const promotion = 'rnb2bnr/pppPkppp/8/4p3/7q/8/PPPP1PPP/RNBQKBNR w KQ - 1 5';
-const stalemate = '4k3/4P3/8/4K3/8/8/8/8 w - - 0 78';
-const material = 'k7/8/n7/8/8/8/8/7K b - - 0 1';
-const checkmate =
-  'rnb1kbnr/pppp1ppp/8/4p1q1/5PP1/8/PPPPP2P/RNBQKBNR b KQkq - 1 3';
+// const promotion = 'rnb2bnr/pppPkppp/8/4p3/7q/8/PPPP1PPP/RNBQKBNR w KQ - 1 5';
+// const stalemate = '4k3/4P3/8/4K3/8/8/8/8 w - - 0 78';
+// const material = 'k7/8/n7/8/8/8/8/7K b - - 0 1';
+// const checkmate =
+//   'rnb1kbnr/pppp1ppp/8/4p1q1/5PP1/8/PPPPP2P/RNBQKBNR b KQkq - 1 3';
+
+const DEFAULT_VIEW = 'fixed';
+const DEFAULT_SIDE = 'random';
+const DEFAULT_MODE = 'with-AI';
+
+type TView = 'fixed' | 'auto-rotate';
+type TMode = 'two-players' | 'with-AI';
+type TSide = 'w' | 'b' | 'random';
 
 const startFen = localStorage.getItem('react-chess-fen') || undefined;
-const startView = localStorage.getItem('react-chess-view') || 'fixed';
-const startSide = localStorage.getItem('react-chess-side') || 'random';
+const startView = localStorage.getItem('react-chess-view') || DEFAULT_VIEW;
+const startSide = localStorage.getItem('react-chess-side') || DEFAULT_SIDE;
+const startMode = localStorage.getItem('react-chess-mode') || DEFAULT_MODE;
+let startActualSide = localStorage.getItem('react-chess-actual-side');
+if (!startActualSide) {
+  startActualSide = startSide === 'random' ? getRandomSide() : startSide;
+}
 const chess = new (Chess as any)(startFen);
 
-const getBoard = (view: 'fixed' | 'auto-rotate', turn: 'w' | 'b') => {
+if (startMode === 'with-AI' && chess.turn() !== startActualSide) {
+  generateAIMove(chess.fen());
+}
+
+const getBoard = (
+  view: 'fixed' | 'auto-rotate',
+  turn: string,
+  mode: TMode,
+  side: string
+) => {
   const board = chess.board().flat();
-  if (view === 'auto-rotate' && turn !== 'w') {
+  if (mode !== 'with-AI' && view === 'auto-rotate' && turn !== 'w') {
+    return board.reverse();
+  }
+  if (mode === 'with-AI' && side === 'b') {
     return board.reverse();
   }
   return board;
@@ -48,28 +76,57 @@ const getResults = () => {
 };
 
 const initialState = {
-  board: getBoard(startView as 'fixed' | 'auto-rotate', chess.turn()),
+  board: getBoard(
+    startView as TView,
+    chess.turn(),
+    startMode as TMode,
+    startActualSide as 'w' | 'b'
+  ),
   selectedSquare: null as number | null,
   promotion: null as { from: string; to: string; color: string } | null,
   turn: chess.turn() as 'w' | 'b',
-  view: startView as 'fixed' | 'auto-rotate',
-  side: startSide as 'w' | 'b' | 'random',
+  view: startView as TView,
+  side: startSide as TSide,
+  actualSide: startActualSide as 'w' | 'b',
+  mode: startMode as TMode,
+  fen: chess.fen() as string,
   isGameOver: false,
   result: null as string | null,
 };
 
-const chessReducer = (state = initialState, action: any) => {
+const chessReducer = (
+  state = initialState,
+  action: any
+): typeof initialState => {
   switch (action.type) {
     case START_GAME: {
       chess.reset();
+
       localStorage.setItem('react-chess-fen', '');
+      const side = (localStorage.getItem('react-chess-side') ||
+        DEFAULT_SIDE) as TSide;
+      const view = (localStorage.getItem('react-chess-view') ||
+        DEFAULT_VIEW) as TView;
+      const mode = (localStorage.getItem('react-chess-mode') ||
+        DEFAULT_MODE) as TMode;
+
+      const actualSide = side === 'random' ? getRandomSide() : side;
+      localStorage.setItem('react-chess-actual-side', actualSide);
+
+      if (mode === 'with-AI' && actualSide === 'b') {
+        generateAIMove(chess.fen());
+      }
+
       return {
         selectedSquare: null,
         promotion: null,
         turn: chess.turn() as 'w' | 'b',
-        view: localStorage.getItem('react-chess-view') || 'fixed',
-        side: localStorage.getItem('react-chess-side') || 'random',
-        board: getBoard(state.view, chess.turn()),
+        view,
+        side,
+        actualSide,
+        mode,
+        fen: chess.fen(),
+        board: getBoard(state.view, chess.turn(), mode, actualSide),
         isGameOver: false,
         result: null,
       };
@@ -82,12 +139,15 @@ const chessReducer = (state = initialState, action: any) => {
     }
 
     case MOVE_PIECE: {
-      const { selectedSquare } = state;
+      const { selectedSquare, view, turn, mode, actualSide } = state;
       if (!selectedSquare || selectedSquare === action.payload) {
         return state;
       }
 
-      const isReversed = state.view === 'auto-rotate' && state.turn === 'b';
+      let isReversed = mode === 'with-AI' && actualSide === 'b';
+      if (mode !== 'with-AI' && view === 'auto-rotate' && turn === 'b') {
+        isReversed = true;
+      }
 
       const from = getPosition(selectedSquare, isReversed);
       const to = getPosition(action.payload, isReversed);
@@ -111,13 +171,18 @@ const chessReducer = (state = initialState, action: any) => {
       localStorage.setItem('react-chess-fen', chess.fen());
       const isGameOver = chess.game_over();
 
+      if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
+        generateAIMove(chess.fen());
+      }
+
       return {
         ...state,
         selectedSquare: null,
         turn: chess.turn(),
-        board: getBoard(state.view, chess.turn()),
+        board: getBoard(state.view, chess.turn(), mode, actualSide),
         isGameOver,
         result: isGameOver ? getResults() : null,
+        fen: chess.fen(),
       };
     }
 
@@ -128,14 +193,50 @@ const chessReducer = (state = initialState, action: any) => {
       localStorage.setItem('react-chess-fen', chess.fen());
       const isGameOver = chess.game_over();
 
+      const { mode, actualSide } = state;
+      if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
+        generateAIMove(chess.fen());
+      }
+
       return {
         ...state,
         selectedSquare: null,
         promotion: null,
         turn: chess.turn(),
-        board: getBoard(state.view, chess.turn()),
+        board: getBoard(state.view, chess.turn(), mode, actualSide),
         isGameOver,
         result: isGameOver ? getResults() : null,
+        fen: chess.fen(),
+      };
+    }
+
+    case MAKE_AI_MOVE: {
+      const { from, to, promotion: p } = action.payload;
+      const move = { from, to } as {
+        from: string;
+        to: string;
+        promotion?: string;
+      };
+
+      if (p) {
+        move.promotion = p;
+      }
+
+      const isLegal = chess.move({ from, to });
+      localStorage.setItem('react-chess-fen', chess.fen());
+      const isGameOver = chess.game_over();
+
+      const { mode, actualSide } = state;
+
+      return {
+        ...state,
+        selectedSquare: null,
+        promotion: null,
+        turn: chess.turn(),
+        board: getBoard(state.view, chess.turn(), mode, actualSide),
+        isGameOver,
+        result: isGameOver ? getResults() : null,
+        fen: chess.fen(),
       };
     }
 
@@ -152,6 +253,14 @@ const chessReducer = (state = initialState, action: any) => {
       return {
         ...state,
         side: action.payload,
+      };
+    }
+
+    case SET_MODE: {
+      localStorage.setItem('react-chess-mode', action.payload);
+      return {
+        ...state,
+        mode: action.payload,
       };
     }
 

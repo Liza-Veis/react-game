@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { NavLink, useHistory } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { startGame } from '../../redux/chessActions';
 import { TDispatch } from '../../redux/types';
 

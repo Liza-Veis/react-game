@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { TDispatch, TState } from '../../../redux/types';
 import Square from './Square';
@@ -12,8 +12,10 @@ type Props = {
   board: (PieceType | null)[];
   selectedSquare: number | null;
   promotion: { from: string; to: string; color: string } | null;
-  turn: 'w' | 'b';
+  turn: string;
   isGameOver: boolean;
+  mode: string;
+  side: string;
   select: (idx: number) => void;
   moveTo: (idx: number) => void;
 };
@@ -27,20 +29,31 @@ const Board: React.FC<Props> = (props: Props) => {
     select,
     moveTo,
     isGameOver,
+    mode,
+    side,
   } = props;
 
+  const [isShownGameOver, setIsShownGameOver] = useState(isGameOver);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsShownGameOver(isGameOver);
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [isGameOver]);
+
   const handleClick = (piece: PieceType | null, idx: number) => {
-    if (selectedSquare === idx) {
+    if (selectedSquare === idx || (mode === 'with-AI' && turn !== side)) {
       return;
     }
-
     if (!piece) {
       moveTo(idx);
       return;
     }
-
     if (piece.color !== turn) {
-      if (selectedSquare) moveTo(idx);
+      if (selectedSquare) {
+        moveTo(idx);
+      }
       return;
     }
 
@@ -65,12 +78,14 @@ const Board: React.FC<Props> = (props: Props) => {
               piece={piece}
               turn={turn}
               isSelected={selectedSquare === idx}
+              mode={mode}
+              side={side}
             />
           )}
         </Square>
       ))}
       {promotion && <Promotion info={promotion} />}
-      {isGameOver && <GameOver />}
+      {isShownGameOver && <GameOver />}
     </div>
   );
 };
@@ -82,6 +97,8 @@ const mapStateToProps = (state: TState) => {
     promotion: state.promotion,
     turn: state.turn,
     isGameOver: state.isGameOver,
+    mode: state.mode,
+    side: state.actualSide,
   };
 };
 

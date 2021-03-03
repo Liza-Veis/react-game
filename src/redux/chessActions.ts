@@ -1,7 +1,9 @@
 import {
+  MAKE_AI_MOVE,
   MOVE_PIECE,
   PROMOTE_PAWN,
   SELECT_SQUARE,
+  SET_MODE,
   SET_SIDE,
   SET_VIEW,
   START_GAME,
@@ -32,6 +34,18 @@ export const promotePawn = (info: {
   };
 };
 
+export const makeAIMove = (move: {
+  from: string;
+  to: string;
+  promotion?: string;
+}) => {
+  const payload = { ...move };
+  return {
+    type: MAKE_AI_MOVE,
+    payload,
+  };
+};
+
 export const startGame = () => {
   return {
     type: START_GAME,
@@ -48,6 +62,13 @@ export const setView = (value: string) => {
 export const setSide = (value: string) => {
   return {
     type: SET_SIDE,
+    payload: value,
+  };
+};
+
+export const setMode = (value: string) => {
+  return {
+    type: SET_MODE,
     payload: value,
   };
 };

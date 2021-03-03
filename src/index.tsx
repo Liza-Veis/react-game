@@ -1,28 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import stockfish from './AI';
+import store from './redux/store';
+import handleMessage from './AI/handleMessage';
 
-// const stockfish = new Worker('./stockfish/stockfish.js');
-
-// stockfish.postMessage('uci');
-// stockfish.postMessage('ucinewgame');
-
-// const fen = 'rnbqkbnr/ppppp1pp/8/5p2/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2';
-
-// stockfish.postMessage(`position fen ${fen} d`);
-
-// stockfish.onmessage = function (event: any) {
-//   console.log(event);
-//   //   console.log(event.data ? event.data : event);
-// };
+stockfish.onmessage = (e: MessageEvent) => handleMessage(e, store.dispatch);
 
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <Provider store={store}>
+        <App />
+      </Provider>
     </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')

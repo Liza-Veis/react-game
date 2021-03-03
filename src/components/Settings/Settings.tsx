@@ -1,25 +1,37 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import { setSide, setView } from '../../redux/chessActions';
+import { setMode, setSide, setView } from '../../redux/chessActions';
 import { TDispatch, TState } from '../../redux/types';
+import AiSettings from './components/AiSettings';
+import TwoPlayersSettings from './components/TwoPlayersSettings';
 
 type Props = {
-  side: 'w' | 'b' | 'random';
-  view: 'auto-rotate' | 'fixed';
+  side: string;
+  view: string;
+  mode: string;
   setView: (value: string) => void;
   setSide: (value: string) => void;
+  setMode: (value: string) => void;
 };
 
 const Settings: React.FC<Props> = (props: Props) => {
-  const { side, view } = props;
+  const { side, view, mode } = props;
   const history = useHistory();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.name === 'view') {
-      props.setView(e.target.value);
-    } else if (e.target.name === 'side') {
-      props.setSide(e.target.value);
+    switch (e.target.name) {
+      case 'view':
+        props.setView(e.target.value);
+        break;
+      case 'side':
+        props.setSide(e.target.value);
+        break;
+      case 'mode':
+        props.setMode(e.target.value);
+        break;
+      default:
+        break;
     }
   };
 
@@ -33,60 +45,35 @@ const Settings: React.FC<Props> = (props: Props) => {
         Back
       </button>
       <div className="settings__item">
-        <h3 className="settings__title">View</h3>
+        <h3 className="settings__title">Mode</h3>
         <div className="settings__box" onChange={handleChange}>
           <span>
             <input
               type="radio"
-              name="view"
-              value="auto-rotate"
-              defaultChecked={view === 'auto-rotate'}
+              name="mode"
+              value="with-AI"
+              defaultChecked={mode === 'with-AI'}
             />
-            Auto rotate
+            With AI
           </span>
           <span>
             <input
               type="radio"
-              name="view"
-              value="fixed"
-              defaultChecked={view === 'fixed'}
+              name="mode"
+              value="two-players"
+              defaultChecked={mode === 'two-players'}
             />
-            Fixed
+            Two players
           </span>
         </div>
       </div>
-      <div className="settings__item">
-        <h3 className="settings__title">Side</h3>
-        <div className="settings__box" onChange={handleChange}>
-          <span>
-            <input
-              type="radio"
-              name="side"
-              value="w"
-              defaultChecked={side === 'w'}
-            />
-            White
-          </span>
-          <span>
-            <input
-              type="radio"
-              name="side"
-              value="b"
-              defaultChecked={side === 'b'}
-            />
-            Black
-          </span>
-          <span>
-            <input
-              type="radio"
-              name="side"
-              value="random"
-              defaultChecked={side === 'random'}
-            />
-            Random
-          </span>
-        </div>
-      </div>
+
+      {mode === 'with-AI' && (
+        <AiSettings handleChange={handleChange} side={side} />
+      )}
+      {mode === 'two-players' && (
+        <TwoPlayersSettings handleChange={handleChange} view={view} />
+      )}
     </div>
   );
 };
@@ -95,6 +82,7 @@ const mapStateToProps = (state: TState) => {
   return {
     side: state.side,
     view: state.view,
+    mode: state.mode,
   };
 };
 
@@ -102,6 +90,7 @@ const mapDispatchToProps = (dispatch: TDispatch) => {
   return {
     setSide: (value: string) => dispatch(setSide(value)),
     setView: (value: string) => dispatch(setView(value)),
+    setMode: (value: string) => dispatch(setMode(value)),
   };
 };
 
