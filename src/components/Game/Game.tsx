@@ -1,21 +1,30 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { NavLink } from 'react-router-dom';
+import { TState } from '../../redux/types';
 import Board from './components/Board';
 
-const Game = () => {
-  const history = useHistory();
-  const handleClick = () => {
-    history.push('/');
-  };
+type Props = {
+  isGameOver: boolean;
+};
 
+const Game: React.FC<Props> = ({ isGameOver }: Props) => {
   return (
     <div className="game">
       <Board />
-      <button className="btn game__btn" onClick={handleClick} type="button">
-        Surrender
-      </button>
+      {!isGameOver && (
+        <NavLink className="btn game__btn" to="/">
+          Surrender
+        </NavLink>
+      )}
     </div>
   );
 };
 
-export default Game;
+const mapStateToProps = (state: TState) => {
+  return {
+    isGameOver: state.isGameOver,
+  };
+};
+
+export default connect(mapStateToProps)(Game);

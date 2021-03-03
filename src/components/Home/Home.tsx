@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { useHistory } from 'react-router-dom';
+import { NavLink, useHistory } from 'react-router-dom';
 import { startGame } from '../../redux/chessActions';
 import { TDispatch } from '../../redux/types';
 
@@ -9,40 +9,20 @@ type Props = {
 };
 
 const Home: React.FC<Props> = ({ startNewGame }: Props) => {
-  const history = useHistory();
-  const handleClick = (route: string) => {
-    history.push(route);
-  };
-
   return (
     <div className="main">
-      <button
-        className="btn"
-        onClick={() => {
-          handleClick('/game');
-          startNewGame();
-        }}
-        type="button"
-      >
+      <NavLink className="btn" onClick={startNewGame} to="/game">
         New Game
-      </button>
-      <button
-        className="btn"
-        onClick={() => handleClick('/settings')}
-        type="button"
-      >
+      </NavLink>
+      <NavLink className="btn" to="/settings">
         Settings
-      </button>
-      <button
-        className="btn"
-        onClick={() => handleClick('/statistics')}
-        type="button"
-      >
+      </NavLink>
+      <NavLink className="btn" to="/statistics">
         Statistics
-      </button>
-      <button className="btn" onClick={() => handleClick('/')} type="button">
+      </NavLink>
+      <NavLink className="btn" to="/">
         Hot keys
-      </button>
+      </NavLink>
     </div>
   );
 };

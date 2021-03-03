@@ -1,23 +1,33 @@
 import React from 'react';
-import { connect, useStore } from 'react-redux';
+import { connect } from 'react-redux';
 import { TDispatch, TState } from '../../../redux/types';
 import Square from './Square';
 import Piece, { PieceType } from './Piece';
 import { movePiece, selectSquare } from '../../../redux/chessActions';
 import { isDarkSquare } from '../../../utils';
 import Promotion from './Promotion';
+import GameOver from './GameOver';
 
 type Props = {
   board: (PieceType | null)[];
   selectedSquare: number | null;
   promotion: { from: string; to: string; color: string } | null;
   turn: 'w' | 'b';
+  isGameOver: boolean;
   select: (idx: number) => void;
   moveTo: (idx: number) => void;
 };
 
 const Board: React.FC<Props> = (props: Props) => {
-  const { board, selectedSquare, promotion, turn, select, moveTo } = props;
+  const {
+    board,
+    selectedSquare,
+    promotion,
+    turn,
+    select,
+    moveTo,
+    isGameOver,
+  } = props;
 
   const handleClick = (piece: PieceType | null, idx: number) => {
     if (selectedSquare === idx) {
@@ -60,6 +70,7 @@ const Board: React.FC<Props> = (props: Props) => {
         </Square>
       ))}
       {promotion && <Promotion info={promotion} />}
+      {isGameOver && <GameOver />}
     </div>
   );
 };
@@ -70,6 +81,7 @@ const mapStateToProps = (state: TState) => {
     selectedSquare: state.selectedSquare,
     promotion: state.promotion,
     turn: state.turn,
+    isGameOver: state.isGameOver,
   };
 };
 
