@@ -1,20 +1,29 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { NavLink } from 'react-router-dom';
-import { TState } from '../../redux/types';
+import { TDispatch, TState } from '../../redux/types';
 import Board from './components/Board';
 import { stopSearching } from '../../AI/sendMessage';
+import { surrender } from '../../redux/chessActions';
 
 type Props = {
   isGameOver: boolean;
+  surrender: () => void;
 };
 
-const Game: React.FC<Props> = ({ isGameOver }: Props) => {
+const Game: React.FC<Props> = ({
+  isGameOver,
+  surrender: surrenderFn,
+}: Props) => {
+  const handleClick = () => {
+    surrenderFn();
+    stopSearching();
+  };
   return (
     <div className="game">
       <Board />
       {!isGameOver && (
-        <NavLink className="btn game__btn" to="/" onClick={stopSearching}>
+        <NavLink className="btn game__btn" to="/" onClick={handleClick}>
           Surrender
         </NavLink>
       )}
@@ -28,4 +37,10 @@ const mapStateToProps = (state: TState) => {
   };
 };
 
-export default connect(mapStateToProps)(Game);
+const mapDispatchToProps = (dispatch: TDispatch) => {
+  return {
+    surrender: () => dispatch(surrender()),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Game);

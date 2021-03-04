@@ -1,6 +1,9 @@
 import * as Chess from 'chess.js';
 import { generateAIMove } from '../AI/sendMessage';
 import { getPosition, getRandomSide } from '../utils';
+import moveSoundSrc from '../audio/move.wav';
+import musicSrc from '../audio/music.mp3';
+
 import {
   SELECT_SQUARE,
   MOVE_PIECE,
@@ -10,6 +13,9 @@ import {
   SET_SIDE,
   SET_MODE,
   MAKE_AI_MOVE,
+  SURRENDER,
+  SET_SOUND,
+  SET_MUSIC,
 } from './chessActionsTypes';
 
 // const promotion = 'rnb2bnr/pppPkppp/8/4p3/7q/8/PPPP1PPP/RNBQKBNR w KQ - 1 5';
@@ -21,6 +27,8 @@ import {
 const DEFAULT_VIEW = 'fixed';
 const DEFAULT_SIDE = 'random';
 const DEFAULT_MODE = 'with-AI';
+const DEFAULT_SOUND = 0.5;
+const DEFAULT_MUSIC = 0;
 
 type TView = 'fixed' | 'auto-rotate';
 type TMode = 'two-players' | 'with-AI';
@@ -39,6 +47,15 @@ const chess = new (Chess as any)(startFen);
 if (startMode === 'with-AI' && chess.turn() !== startActualSide) {
   generateAIMove(chess.fen());
 }
+
+const moveSound = new Audio();
+moveSound.src = moveSoundSrc;
+moveSound.volume = DEFAULT_SOUND;
+
+const music = new Audio();
+music.loop = true;
+music.src = musicSrc;
+music.volume = DEFAULT_MUSIC;
 
 const getBoard = (
   view: 'fixed' | 'auto-rotate',
@@ -89,9 +106,11 @@ const initialState = {
   side: startSide as TSide,
   actualSide: startActualSide as 'w' | 'b',
   mode: startMode as TMode,
-  fen: chess.fen() as string,
   isGameOver: false,
   result: null as string | null,
+  isSurrender: false,
+  music: DEFAULT_MUSIC,
+  sound: DEFAULT_SOUND,
 };
 
 const chessReducer = (
@@ -118,6 +137,7 @@ const chessReducer = (
       }
 
       return {
+        ...state,
         selectedSquare: null,
         promotion: null,
         turn: chess.turn() as 'w' | 'b',
@@ -125,10 +145,10 @@ const chessReducer = (
         side,
         actualSide,
         mode,
-        fen: chess.fen(),
         board: getBoard(state.view, chess.turn(), mode, actualSide),
         isGameOver: false,
         result: null,
+        isSurrender: false,
       };
     }
     case SELECT_SQUARE: {
@@ -156,6 +176,7 @@ const chessReducer = (
         .filter((m: { [key: string]: string }) => m.promotion);
 
       if (promotions.some((p) => p.from === from && p.to === to)) {
+        moveSound.play();
         const { color } = promotions[0];
         return {
           ...state,
@@ -171,6 +192,10 @@ const chessReducer = (
       localStorage.setItem('react-chess-fen', chess.fen());
       const isGameOver = chess.game_over();
 
+      if (state.sound) {
+        moveSound.play();
+      }
+
       if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
         generateAIMove(chess.fen());
       }
@@ -182,7 +207,6 @@ const chessReducer = (
         board: getBoard(state.view, chess.turn(), mode, actualSide),
         isGameOver,
         result: isGameOver ? getResults() : null,
-        fen: chess.fen(),
       };
     }
 
@@ -206,11 +230,14 @@ const chessReducer = (
         board: getBoard(state.view, chess.turn(), mode, actualSide),
         isGameOver,
         result: isGameOver ? getResults() : null,
-        fen: chess.fen(),
       };
     }
 
     case MAKE_AI_MOVE: {
+      if (state.isSurrender) {
+        return { ...state };
+      }
+
       const { from, to, promotion: p } = action.payload;
       const move = { from, to } as {
         from: string;
@@ -222,10 +249,13 @@ const chessReducer = (
         move.promotion = p;
       }
 
-      const isLegal = chess.move({ from, to });
+      chess.move({ from, to });
       localStorage.setItem('react-chess-fen', chess.fen());
-      const isGameOver = chess.game_over();
+      if (state.sound) {
+        moveSound.play();
+      }
 
+      const isGameOver = chess.game_over();
       const { mode, actualSide } = state;
 
       return {
@@ -236,7 +266,6 @@ const chessReducer = (
         board: getBoard(state.view, chess.turn(), mode, actualSide),
         isGameOver,
         result: isGameOver ? getResults() : null,
-        fen: chess.fen(),
       };
     }
 
@@ -261,6 +290,34 @@ const chessReducer = (
       return {
         ...state,
         mode: action.payload,
+      };
+    }
+
+    case SET_SOUND: {
+      moveSound.volume = action.payload;
+      return {
+        ...state,
+        sound: action.payload,
+      };
+    }
+
+    case SET_MUSIC: {
+      if (music.paused && action.payload) {
+        music.play();
+      } else if (!action.payload) {
+        music.pause();
+      }
+      music.volume = action.payload;
+      return {
+        ...state,
+        music: action.payload,
+      };
+    }
+
+    case SURRENDER: {
+      return {
+        ...state,
+        isSurrender: true,
       };
     }
 

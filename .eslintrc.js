@@ -37,5 +37,6 @@ module.exports = {
         singleQuote: true,
       },
     ],
+    'jsx-a11y/label-has-associated-control': 'off',
   },
 };

@@ -4,9 +4,12 @@ import {
   PROMOTE_PAWN,
   SELECT_SQUARE,
   SET_MODE,
+  SET_MUSIC,
   SET_SIDE,
+  SET_SOUND,
   SET_VIEW,
   START_GAME,
+  SURRENDER,
 } from './chessActionsTypes';
 
 export const selectSquare = (idx: number) => {
@@ -70,5 +73,25 @@ export const setMode = (value: string) => {
   return {
     type: SET_MODE,
     payload: value,
+  };
+};
+
+export const setMusic = (value: number) => {
+  return {
+    type: SET_MUSIC,
+    payload: value,
+  };
+};
+
+export const setSound = (value: number) => {
+  return {
+    type: SET_SOUND,
+    payload: value,
+  };
+};
+
+export const surrender = () => {
+  return {
+    type: SURRENDER,
   };
 };

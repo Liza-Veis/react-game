@@ -6,3 +6,6 @@ export const START_GAME = 'START_GAME';
 export const SET_VIEW = 'SET_VIEW';
 export const SET_SIDE = 'SET_SIDE';
 export const SET_MODE = 'SET_MODE';
+export const SET_MUSIC = 'SET_MUSIC';
+export const SET_SOUND = 'SET_SOUND';
+export const SURRENDER = 'SURRENDER';

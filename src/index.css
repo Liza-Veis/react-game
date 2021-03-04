@@ -178,12 +178,13 @@ button {
   margin-bottom: 10px;
 }
 
-.settings__box span {
+.settings__box label {
   padding: 0 15px;
   font-size: 20px;
+  cursor: pointer;
 }
 
-.settings__box input {
+.settings__item input {
   margin-right: 5px;
   cursor: pointer;
 }
@@ -192,4 +193,20 @@ button {
   position: fixed;
   top: 40px;
   right: 60px;
+}
+
+.audio label {
+  display: block;
+  margin-bottom: 10px;
+  cursor: default;
+}
+
+.audio label:last-child {
+  margin-bottom: 0;
+}
+
+.audio input {
+  margin-left: 20px;
+  margin-right: 0;
+  width: 150px;
 }

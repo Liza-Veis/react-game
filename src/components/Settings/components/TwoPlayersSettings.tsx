@@ -1,4 +1,5 @@
 import React from 'react';
+import RadioInput from './inputs/RadioInput';
 
 type Props = {
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -11,24 +12,18 @@ const TwoPlayersSettings: React.FC<Props> = ({ handleChange, view }: Props) => {
       <div className="settings__item">
         <h3 className="settings__title">View</h3>
         <div className="settings__box" onChange={handleChange}>
-          <span>
-            <input
-              type="radio"
-              name="view"
-              value="auto-rotate"
-              defaultChecked={view === 'auto-rotate'}
-            />
-            Auto rotate
-          </span>
-          <span>
-            <input
-              type="radio"
-              name="view"
-              value="fixed"
-              defaultChecked={view === 'fixed'}
-            />
-            Fixed
-          </span>
+          <RadioInput
+            name="view"
+            value="auto-rotate"
+            checked={view === 'auto-rotate'}
+            label="Auto rotate"
+          />
+          <RadioInput
+            name="view"
+            value="fixed"
+            checked={view === 'fixed'}
+            label="Fixed"
+          />
         </div>
       </div>
     </>
