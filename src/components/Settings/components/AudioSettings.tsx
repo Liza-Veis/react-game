@@ -11,7 +11,7 @@ const AudioSettings: React.FC<Props> = (props: Props) => {
   const { handleChange, music, sound } = props;
 
   return (
-    <div className="settings__item audio" onChange={handleChange}>
+    <div className="settings__item audio">
       <h3 className="settings__title">Audio</h3>
       <div className="settings__box" onChange={handleChange}>
         <RangeInput name="music" value={music} label="Music:" />

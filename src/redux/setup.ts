@@ -108,7 +108,7 @@ const getResults = (): string => {
 };
 
 // make move after reload if ai turn
-if (startSettings.mode === 'with-AI') {
+if (window.location.pathname === '/game' && startSettings.mode === 'with-AI') {
   if (chess.turn() !== startSettings.actualSide) {
     generateAIMove(chess.fen());
   }

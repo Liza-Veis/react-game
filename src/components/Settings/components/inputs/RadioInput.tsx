@@ -7,12 +7,8 @@ type Props = {
   label: string;
 };
 
-const RadioInput: React.FC<Props> = ({
-  name,
-  value,
-  checked,
-  label,
-}: Props) => {
+const RadioInput: React.FC<Props> = (props: Props) => {
+  const { name, value, checked, label } = props;
   /* eslint-disable jsx-a11y/label-has-associated-control */
   return (
     <label>

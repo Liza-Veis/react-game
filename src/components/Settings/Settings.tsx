@@ -12,6 +12,7 @@ import {
 import { TDispatch, TState } from '../../redux/types';
 import AiSettings from './components/AiSettings';
 import AudioSettings from './components/AudioSettings';
+import FullscreenSettings from './components/FullscreenSettings';
 import ModeSettings from './components/ModeSettings';
 import TwoPlayersSettings from './components/TwoPlayersSettings';
 
@@ -21,6 +22,7 @@ type Props = {
   mode: TMode;
   sound: number;
   music: number;
+  fullscreen: [boolean, () => void];
   setView: (value: TView) => void;
   setSide: (value: TSide) => void;
   setMode: (value: TMode) => void;
@@ -29,27 +31,33 @@ type Props = {
 };
 
 const Settings: React.FC<Props> = (props: Props) => {
-  const { side, view, mode, sound, music } = props;
+  const { side, view, mode, sound, music, fullscreen } = props;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     switch (e.target.name) {
-      case 'view':
+      case 'view': {
         props.setView(e.target.value as TView);
         break;
-      case 'side':
+      }
+      case 'side': {
         props.setSide(e.target.value as TSide);
         break;
-      case 'mode':
+      }
+      case 'mode': {
         props.setMode(e.target.value as TMode);
         break;
-      case 'music':
+      }
+      case 'music': {
         props.setMusic(+e.target.value);
         break;
-      case 'sound':
+      }
+      case 'sound': {
         props.setSound(+e.target.value);
         break;
-      default:
+      }
+      default: {
         break;
+      }
     }
   };
 
@@ -68,6 +76,7 @@ const Settings: React.FC<Props> = (props: Props) => {
       )}
 
       <AudioSettings handleChange={handleChange} music={music} sound={sound} />
+      <FullscreenSettings fullscreen={fullscreen} />
     </div>
   );
 };

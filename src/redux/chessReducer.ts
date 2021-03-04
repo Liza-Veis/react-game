@@ -232,6 +232,21 @@ const chessReducer = (
       };
     }
 
+    case SURRENDER: {
+      let result = 'WINNER - ';
+      if (state.mode === 'with-AI') {
+        result += state.actualSide === 'w' ? 'BLACK' : 'WHITE';
+      } else {
+        result += state.turn === 'w' ? 'BLACK' : 'WHITE';
+      }
+      return {
+        ...state,
+        isSurrender: true,
+        isGameOver: true,
+        result,
+      };
+    }
+
     case SET_VIEW: {
       storeItem('view', action.payload);
       return {
@@ -275,21 +290,6 @@ const chessReducer = (
       return {
         ...state,
         music: action.payload,
-      };
-    }
-
-    case SURRENDER: {
-      let result = 'WINNER - ';
-      if (state.mode === 'with-AI') {
-        result += state.actualSide === 'w' ? 'BLACK' : 'WHITE';
-      } else {
-        result += state.turn === 'w' ? 'BLACK' : 'WHITE';
-      }
-      return {
-        ...state,
-        isSurrender: true,
-        isGameOver: true,
-        result,
       };
     }
 
