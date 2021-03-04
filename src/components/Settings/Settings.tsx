@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { NavLink } from 'react-router-dom';
+import { TMode, TSide, TView } from '../../AppConstants';
 import {
   setMode,
   setMusic,
@@ -15,14 +16,14 @@ import ModeSettings from './components/ModeSettings';
 import TwoPlayersSettings from './components/TwoPlayersSettings';
 
 type Props = {
-  side: string;
-  view: string;
-  mode: string;
+  side: TSide;
+  view: TView;
+  mode: TMode;
   sound: number;
   music: number;
-  setView: (value: string) => void;
-  setSide: (value: string) => void;
-  setMode: (value: string) => void;
+  setView: (value: TView) => void;
+  setSide: (value: TSide) => void;
+  setMode: (value: TMode) => void;
   setMusic: (value: number) => void;
   setSound: (value: number) => void;
 };
@@ -33,13 +34,13 @@ const Settings: React.FC<Props> = (props: Props) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     switch (e.target.name) {
       case 'view':
-        props.setView(e.target.value);
+        props.setView(e.target.value as TView);
         break;
       case 'side':
-        props.setSide(e.target.value);
+        props.setSide(e.target.value as TSide);
         break;
       case 'mode':
-        props.setMode(e.target.value);
+        props.setMode(e.target.value as TMode);
         break;
       case 'music':
         props.setMusic(+e.target.value);
@@ -83,9 +84,9 @@ const mapStateToProps = (state: TState) => {
 
 const mapDispatchToProps = (dispatch: TDispatch) => {
   return {
-    setSide: (value: string) => dispatch(setSide(value)),
-    setView: (value: string) => dispatch(setView(value)),
-    setMode: (value: string) => dispatch(setMode(value)),
+    setSide: (value: TSide) => dispatch(setSide(value)),
+    setView: (value: TView) => dispatch(setView(value)),
+    setMode: (value: TMode) => dispatch(setMode(value)),
     setSound: (value: number) => dispatch(setSound(value)),
     setMusic: (value: number) => dispatch(setMusic(value)),
   };

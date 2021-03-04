@@ -1,16 +1,12 @@
 import React from 'react';
-
-export type PieceType = {
-  color: string;
-  type: string;
-};
+import { TColor, TMode, TPiece, TSide } from '../../../AppConstants';
 
 type Props = {
-  piece: PieceType;
+  piece: TPiece;
   isSelected: boolean;
-  turn: string;
-  mode: string;
-  side: string;
+  turn: TColor;
+  mode: TMode;
+  side: TSide;
 };
 
 const Piece: React.FC<Props> = ({

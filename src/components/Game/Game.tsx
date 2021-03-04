@@ -1,6 +1,5 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { NavLink } from 'react-router-dom';
 import { TDispatch, TState } from '../../redux/types';
 import Board from './components/Board';
 import { stopSearching } from '../../AI/sendMessage';
@@ -11,21 +10,19 @@ type Props = {
   surrender: () => void;
 };
 
-const Game: React.FC<Props> = ({
-  isGameOver,
-  surrender: surrenderFn,
-}: Props) => {
+const Game: React.FC<Props> = (props: Props) => {
+  const { isGameOver } = props;
   const handleClick = () => {
-    surrenderFn();
+    props.surrender();
     stopSearching();
   };
   return (
     <div className="game">
       <Board />
       {!isGameOver && (
-        <NavLink className="btn game__btn" to="/" onClick={handleClick}>
+        <button className="btn game__btn" onClick={handleClick} type="button">
           Surrender
-        </NavLink>
+        </button>
       )}
     </div>
   );

@@ -13,6 +13,7 @@ const RadioInput: React.FC<Props> = ({
   checked,
   label,
 }: Props) => {
+  /* eslint-disable jsx-a11y/label-has-associated-control */
   return (
     <label>
       <input type="radio" name={name} value={value} defaultChecked={checked} />

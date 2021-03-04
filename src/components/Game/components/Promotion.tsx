@@ -1,32 +1,23 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { TPendingPromotion, TPromotion } from '../../../AppConstants';
 import { promotePawn } from '../../../redux/chessActions';
 import { TDispatch } from '../../../redux/types';
 
 type Props = {
-  info: {
-    from: string;
-    to: string;
-    color: string;
-  };
-
-  promote: (promotionInfo: {
-    from: string;
-    to: string;
-    promotion: string;
-  }) => void;
+  data: TPendingPromotion;
+  promote: (data: TPromotion) => void;
 };
 
-const Promotion: React.FC<Props> = ({
-  info: { color, from, to },
-  promote,
-}: Props) => {
+const Promotion: React.FC<Props> = ({ data, promote }: Props) => {
   const promotionPieces = ['q', 'n', 'r', 'b'];
+  const color = data?.color;
 
   const handleClick = (promotion: string) => {
+    if (!data) return;
+    const { from, to } = data;
     promote({ from, to, promotion });
   };
-
   return (
     <div className="promotion">
       <div className="promotion__body">
@@ -34,6 +25,8 @@ const Promotion: React.FC<Props> = ({
         <div className="promotion__box">
           {promotionPieces.map((piece, idx) => {
             const title = `${color}${piece.toUpperCase()}`;
+            /* eslint-disable jsx-a11y/no-static-element-interactions */
+            /* eslint-disable jsx-a11y/click-events-have-key-events */
             return (
               <div
                 key={idx}
@@ -52,8 +45,7 @@ const Promotion: React.FC<Props> = ({
 
 const mapDispatchToProps = (dispatch: TDispatch) => {
   return {
-    promote: (promotionInfo: { from: string; to: string; promotion: string }) =>
-      dispatch(promotePawn(promotionInfo)),
+    promote: (data: TPromotion) => dispatch(promotePawn(data)),
   };
 };
 

@@ -1,9 +1,10 @@
 import React from 'react';
+import { TSide } from '../../../AppConstants';
 import RadioInput from './inputs/RadioInput';
 
 type Props = {
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  side: string;
+  side: TSide;
 };
 
 const AiSettings: React.FC<Props> = ({ handleChange, side }: Props) => {

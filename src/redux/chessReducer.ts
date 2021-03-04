@@ -1,9 +1,16 @@
-import * as Chess from 'chess.js';
+import { ShortMove, Square } from 'chess.js';
 import { generateAIMove } from '../AI/sendMessage';
 import { getPosition, getRandomSide } from '../utils';
-import moveSoundSrc from '../audio/move.wav';
-import musicSrc from '../audio/music.mp3';
-
+import {
+  audio,
+  chess,
+  getBoard,
+  getResults,
+  getStoredItem,
+  isReversed,
+  startSettings,
+  storeItem,
+} from './setup';
 import {
   SELECT_SQUARE,
   MOVE_PIECE,
@@ -16,7 +23,20 @@ import {
   SURRENDER,
   SET_SOUND,
   SET_MUSIC,
-} from './chessActionsTypes';
+} from './chessActions/chessActionsTypes';
+import {
+  DEFAULT_MODE,
+  DEFAULT_MUSIC,
+  DEFAULT_SIDE,
+  DEFAULT_SOUND,
+  DEFAULT_VIEW,
+  TColor,
+  TMode,
+  TPendingPromotion,
+  TSide,
+  TView,
+} from '../AppConstants';
+import { TActions } from './chessActions/chessActions.types';
 
 // const promotion = 'rnb2bnr/pppPkppp/8/4p3/7q/8/PPPP1PPP/RNBQKBNR w KQ - 1 5';
 // const stalemate = '4k3/4P3/8/4K3/8/8/8/8 w - - 0 78';
@@ -24,88 +44,20 @@ import {
 // const checkmate =
 //   'rnb1kbnr/pppp1ppp/8/4p1q1/5PP1/8/PPPPP2P/RNBQKBNR b KQkq - 1 3';
 
-const DEFAULT_VIEW = 'fixed';
-const DEFAULT_SIDE = 'random';
-const DEFAULT_MODE = 'with-AI';
-const DEFAULT_SOUND = 0.5;
-const DEFAULT_MUSIC = 0;
-
-type TView = 'fixed' | 'auto-rotate';
-type TMode = 'two-players' | 'with-AI';
-type TSide = 'w' | 'b' | 'random';
-
-const startFen = localStorage.getItem('react-chess-fen') || undefined;
-const startView = localStorage.getItem('react-chess-view') || DEFAULT_VIEW;
-const startSide = localStorage.getItem('react-chess-side') || DEFAULT_SIDE;
-const startMode = localStorage.getItem('react-chess-mode') || DEFAULT_MODE;
-let startActualSide = localStorage.getItem('react-chess-actual-side');
-if (!startActualSide) {
-  startActualSide = startSide === 'random' ? getRandomSide() : startSide;
-}
-const chess = new (Chess as any)(startFen);
-
-if (startMode === 'with-AI' && chess.turn() !== startActualSide) {
-  generateAIMove(chess.fen());
-}
-
-const moveSound = new Audio();
-moveSound.src = moveSoundSrc;
-moveSound.volume = DEFAULT_SOUND;
-
-const music = new Audio();
-music.loop = true;
-music.src = musicSrc;
-music.volume = DEFAULT_MUSIC;
-
-const getBoard = (
-  view: 'fixed' | 'auto-rotate',
-  turn: string,
-  mode: TMode,
-  side: string
-) => {
-  const board = chess.board().flat();
-  if (mode !== 'with-AI' && view === 'auto-rotate' && turn !== 'w') {
-    return board.reverse();
-  }
-  if (mode === 'with-AI' && side === 'b') {
-    return board.reverse();
-  }
-  return board;
-};
-
-const getResults = () => {
-  if (chess.in_checkmate()) {
-    const winner = chess.turn() === 'w' ? 'BLACK' : 'WHITE';
-    return `CHECKMATE: WINNER - ${winner}`;
-  }
-  if (chess.in_draw()) {
-    let reason = '50 MOVES RULE';
-    if (chess.in_stalemate()) {
-      reason = 'STALEMATE';
-    } else if (chess.in_threefold_repetition()) {
-      reason = 'THREEFOLD REPETITION';
-    } else if (chess.insufficient_material()) {
-      reason = 'INSUFFICIENT MATERIAL';
-    }
-    return `DRAW - ${reason}`;
-  }
-  return 'UNKNOWN REASON';
-};
-
 const initialState = {
-  board: getBoard(
-    startView as TView,
-    chess.turn(),
-    startMode as TMode,
-    startActualSide as 'w' | 'b'
-  ),
+  board: getBoard({
+    view: startSettings.view,
+    turn: chess.turn(),
+    mode: startSettings.mode,
+    actualSide: startSettings.actualSide,
+  }),
   selectedSquare: null as number | null,
-  promotion: null as { from: string; to: string; color: string } | null,
-  turn: chess.turn() as 'w' | 'b',
-  view: startView as TView,
-  side: startSide as TSide,
-  actualSide: startActualSide as 'w' | 'b',
-  mode: startMode as TMode,
+  promotion: null as TPendingPromotion,
+  turn: chess.turn(),
+  view: startSettings.view,
+  side: startSettings.side,
+  actualSide: startSettings.actualSide,
+  mode: startSettings.mode,
   isGameOver: false,
   result: null as string | null,
   isSurrender: false,
@@ -115,42 +67,47 @@ const initialState = {
 
 const chessReducer = (
   state = initialState,
-  action: any
+  action: TActions
 ): typeof initialState => {
   switch (action.type) {
     case START_GAME: {
       chess.reset();
+      storeItem('fen', '');
 
-      localStorage.setItem('react-chess-fen', '');
-      const side = (localStorage.getItem('react-chess-side') ||
-        DEFAULT_SIDE) as TSide;
-      const view = (localStorage.getItem('react-chess-view') ||
-        DEFAULT_VIEW) as TView;
-      const mode = (localStorage.getItem('react-chess-mode') ||
-        DEFAULT_MODE) as TMode;
+      const side: TSide = getStoredItem('side') || DEFAULT_SIDE;
+      const view: TView = getStoredItem('view') || DEFAULT_VIEW;
+      const mode: TMode = getStoredItem('mode') || DEFAULT_MODE;
 
-      const actualSide = side === 'random' ? getRandomSide() : side;
-      localStorage.setItem('react-chess-actual-side', actualSide);
+      const actualSide: TColor = side === 'random' ? getRandomSide() : side;
+      storeItem('actual-side', actualSide);
 
       if (mode === 'with-AI' && actualSide === 'b') {
         generateAIMove(chess.fen());
       }
 
+      const boardProps = {
+        view: state.view,
+        turn: chess.turn(),
+        mode,
+        actualSide,
+      };
+
       return {
         ...state,
         selectedSquare: null,
         promotion: null,
-        turn: chess.turn() as 'w' | 'b',
+        turn: chess.turn(),
         view,
         side,
         actualSide,
         mode,
-        board: getBoard(state.view, chess.turn(), mode, actualSide),
+        board: getBoard(boardProps),
         isGameOver: false,
         result: null,
         isSurrender: false,
       };
     }
+
     case SELECT_SQUARE: {
       return {
         ...state,
@@ -160,60 +117,64 @@ const chessReducer = (
 
     case MOVE_PIECE: {
       const { selectedSquare, view, turn, mode, actualSide } = state;
+
       if (!selectedSquare || selectedSquare === action.payload) {
         return state;
       }
 
-      let isReversed = mode === 'with-AI' && actualSide === 'b';
-      if (mode !== 'with-AI' && view === 'auto-rotate' && turn === 'b') {
-        isReversed = true;
-      }
+      const isReversedBoard = isReversed({ view, turn, mode, actualSide });
+      const from = getPosition(selectedSquare, isReversedBoard) as Square;
+      const to = getPosition(action.payload, isReversedBoard) as Square;
 
-      const from = getPosition(selectedSquare, isReversed);
-      const to = getPosition(action.payload, isReversed);
-      const promotions: [{ [key: string]: string }] = chess
+      const promotions = chess
         .moves({ verbose: true })
-        .filter((m: { [key: string]: string }) => m.promotion);
+        .filter((m: ShortMove) => m.promotion);
 
-      if (promotions.some((p) => p.from === from && p.to === to)) {
-        moveSound.play();
+      if (promotions.some((p: ShortMove) => p.from === from && p.to === to)) {
+        audio.move.play();
         const { color } = promotions[0];
         return {
           ...state,
           promotion: { from, to, color },
         };
       }
-      const isLegal = chess.move({ from, to });
 
+      const isLegal = chess.move({ from, to });
       if (!isLegal) {
         return { ...state, selectedSquare: null };
       }
 
-      localStorage.setItem('react-chess-fen', chess.fen());
+      storeItem('fen', chess.fen());
       const isGameOver = chess.game_over();
-
       if (state.sound) {
-        moveSound.play();
+        audio.move.play();
       }
 
       if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
         generateAIMove(chess.fen());
       }
 
+      const boardProps = {
+        view: state.view,
+        turn: chess.turn(),
+        mode,
+        actualSide,
+      };
+
       return {
         ...state,
         selectedSquare: null,
         turn: chess.turn(),
-        board: getBoard(state.view, chess.turn(), mode, actualSide),
+        board: getBoard(boardProps),
         isGameOver,
         result: isGameOver ? getResults() : null,
       };
     }
 
     case PROMOTE_PAWN: {
-      const { from, to, promotion: p } = action.payload;
+      const { from, to, promotion } = action.payload as ShortMove;
 
-      chess.move({ from, to, promotion: p });
+      chess.move({ from, to, promotion });
       localStorage.setItem('react-chess-fen', chess.fen());
       const isGameOver = chess.game_over();
 
@@ -222,12 +183,19 @@ const chessReducer = (
         generateAIMove(chess.fen());
       }
 
+      const boardProps = {
+        view: state.view,
+        turn: chess.turn(),
+        mode,
+        actualSide,
+      };
+
       return {
         ...state,
         selectedSquare: null,
         promotion: null,
         turn: chess.turn(),
-        board: getBoard(state.view, chess.turn(), mode, actualSide),
+        board: getBoard(boardProps),
         isGameOver,
         result: isGameOver ? getResults() : null,
       };
@@ -237,40 +205,35 @@ const chessReducer = (
       if (state.isSurrender) {
         return { ...state };
       }
-
-      const { from, to, promotion: p } = action.payload;
-      const move = { from, to } as {
-        from: string;
-        to: string;
-        promotion?: string;
-      };
-
-      if (p) {
-        move.promotion = p;
-      }
-
-      chess.move({ from, to });
-      localStorage.setItem('react-chess-fen', chess.fen());
+      chess.move(action.payload as ShortMove);
+      storeItem('fen', chess.fen());
       if (state.sound) {
-        moveSound.play();
+        audio.move.play();
       }
 
       const isGameOver = chess.game_over();
-      const { mode, actualSide } = state;
+      const { mode, actualSide, view } = state;
+
+      const boardProps = {
+        view,
+        mode,
+        actualSide,
+        turn: chess.turn(),
+      };
 
       return {
         ...state,
         selectedSquare: null,
         promotion: null,
         turn: chess.turn(),
-        board: getBoard(state.view, chess.turn(), mode, actualSide),
+        board: getBoard(boardProps),
         isGameOver,
         result: isGameOver ? getResults() : null,
       };
     }
 
     case SET_VIEW: {
-      localStorage.setItem('react-chess-view', action.payload);
+      storeItem('view', action.payload);
       return {
         ...state,
         view: action.payload,
@@ -278,7 +241,7 @@ const chessReducer = (
     }
 
     case SET_SIDE: {
-      localStorage.setItem('react-chess-side', action.payload);
+      storeItem('side', action.payload);
       return {
         ...state,
         side: action.payload,
@@ -286,7 +249,7 @@ const chessReducer = (
     }
 
     case SET_MODE: {
-      localStorage.setItem('react-chess-mode', action.payload);
+      storeItem('mode', action.payload);
       return {
         ...state,
         mode: action.payload,
@@ -294,7 +257,7 @@ const chessReducer = (
     }
 
     case SET_SOUND: {
-      moveSound.volume = action.payload;
+      audio.move.volume = action.payload;
       return {
         ...state,
         sound: action.payload,
@@ -302,6 +265,7 @@ const chessReducer = (
     }
 
     case SET_MUSIC: {
+      const { music } = audio;
       if (music.paused && action.payload) {
         music.play();
       } else if (!action.payload) {
@@ -315,9 +279,17 @@ const chessReducer = (
     }
 
     case SURRENDER: {
+      let result = 'WINNER - ';
+      if (state.mode === 'with-AI') {
+        result += state.actualSide === 'w' ? 'BLACK' : 'WHITE';
+      } else {
+        result += state.turn === 'w' ? 'BLACK' : 'WHITE';
+      }
       return {
         ...state,
         isSurrender: true,
+        isGameOver: true,
+        result,
       };
     }
 

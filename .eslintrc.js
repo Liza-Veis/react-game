@@ -26,8 +26,6 @@ module.exports = {
     project: './tsconfig.json',
   },
   rules: {
-    'jsx-a11y/click-events-have-key-events': 'off',
-    'jsx-a11y/no-static-element-interactions': 'off',
     'linebreak-style': 'off',
     'react/no-array-index-key': 'off',
     'prettier/prettier': [
@@ -37,6 +35,5 @@ module.exports = {
         singleQuote: true,
       },
     ],
-    'jsx-a11y/label-has-associated-control': 'off',
   },
 };

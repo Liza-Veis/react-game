@@ -1,9 +1,9 @@
 import React from 'react';
+import { TMode } from '../../../AppConstants';
 import RadioInput from './inputs/RadioInput';
-import RangeInput from './inputs/RangeInput';
 
 type Props = {
-  mode: string;
+  mode: TMode;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 

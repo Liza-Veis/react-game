@@ -7,6 +7,7 @@ type Props = {
 };
 
 const RangeInput: React.FC<Props> = ({ name, value, label }: Props) => {
+  /* eslint-disable jsx-a11y/label-has-associated-control */
   return (
     <label>
       {label}

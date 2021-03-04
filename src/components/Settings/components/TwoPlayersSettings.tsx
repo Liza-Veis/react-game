@@ -1,9 +1,10 @@
 import React from 'react';
+import { TView } from '../../../AppConstants';
 import RadioInput from './inputs/RadioInput';
 
 type Props = {
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  view: string;
+  view: TView;
 };
 
 const TwoPlayersSettings: React.FC<Props> = ({ handleChange, view }: Props) => {

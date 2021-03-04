@@ -2,22 +2,31 @@ import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { TDispatch, TState } from '../../../redux/types';
 import Square from './Square';
-import Piece, { PieceType } from './Piece';
+import Piece from './Piece';
 import { movePiece, selectSquare } from '../../../redux/chessActions';
 import { isDarkSquare } from '../../../utils';
 import Promotion from './Promotion';
 import GameOver from './GameOver';
+import {
+  TBoard,
+  TColor,
+  TMode,
+  TPendingPromotion,
+  TPiece,
+  TSide,
+} from '../../../AppConstants';
 
 type Props = {
-  board: (PieceType | null)[];
+  board: TBoard;
   selectedSquare: number | null;
-  promotion: { from: string; to: string; color: string } | null;
-  turn: string;
+  promotion: TPendingPromotion;
+  turn: TColor;
   isGameOver: boolean;
-  mode: string;
-  side: string;
-  select: (idx: number) => void;
-  moveTo: (idx: number) => void;
+  mode: TMode;
+  side: TSide;
+  isSurrender: boolean;
+  selectSquare: (idx: number) => void;
+  movePiece: (idx: number) => void;
 };
 
 const Board: React.FC<Props> = (props: Props) => {
@@ -26,42 +35,42 @@ const Board: React.FC<Props> = (props: Props) => {
     selectedSquare,
     promotion,
     turn,
-    select,
-    moveTo,
     isGameOver,
     mode,
     side,
+    isSurrender,
   } = props;
 
   const [isShownGameOver, setIsShownGameOver] = useState(isGameOver);
 
   useEffect(() => {
+    const time = isSurrender ? 0 : 1000;
     const timeout = setTimeout(() => {
       setIsShownGameOver(isGameOver);
-    }, 1000);
+    }, time);
     return () => clearTimeout(timeout);
-  }, [isGameOver]);
+  }, [isGameOver, isSurrender]);
 
-  const handleClick = (piece: PieceType | null, idx: number) => {
+  const handleClick = (piece: TPiece | null, idx: number) => {
     if (selectedSquare === idx || (mode === 'with-AI' && turn !== side)) {
       return;
     }
     if (!piece) {
-      moveTo(idx);
+      props.movePiece(idx);
       return;
     }
     if (piece.color !== turn) {
       if (selectedSquare) {
-        moveTo(idx);
+        props.movePiece(idx);
       }
       return;
     }
 
     const targetPiece = board[idx];
     if (targetPiece && targetPiece.color === piece.color) {
-      select(idx);
+      props.selectSquare(idx);
     } else if (selectedSquare) {
-      moveTo(idx);
+      props.movePiece(idx);
     }
   };
 
@@ -84,7 +93,7 @@ const Board: React.FC<Props> = (props: Props) => {
           )}
         </Square>
       ))}
-      {promotion && <Promotion info={promotion} />}
+      {promotion && <Promotion data={promotion} />}
       {isShownGameOver && <GameOver />}
     </div>
   );
@@ -99,13 +108,14 @@ const mapStateToProps = (state: TState) => {
     isGameOver: state.isGameOver,
     mode: state.mode,
     side: state.actualSide,
+    isSurrender: state.isSurrender,
   };
 };
 
 const mapDispatchToProps = (dispatch: TDispatch) => {
   return {
-    select: (idx: number) => dispatch(selectSquare(idx)),
-    moveTo: (idx: number) => dispatch(movePiece(idx)),
+    selectSquare: (idx: number) => dispatch(selectSquare(idx)),
+    movePiece: (idx: number) => dispatch(movePiece(idx)),
   };
 };
 

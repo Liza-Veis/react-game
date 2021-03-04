@@ -1,4 +1,4 @@
-const stockfish = new Worker('./stockfish/stockfish.js');
+const stockfish = new Worker('./stockfish.js');
 
 stockfish.postMessage('uci');
 stockfish.postMessage('ucinewgame');
