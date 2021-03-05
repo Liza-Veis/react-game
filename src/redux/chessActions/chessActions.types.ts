@@ -11,6 +11,7 @@ import {
   SET_VIEW,
   START_GAME,
   SURRENDER,
+  UNDO,
 } from './chessActionsTypes';
 
 export interface ISelectSquare {
@@ -70,6 +71,10 @@ export interface IMakeAIMove {
   };
 }
 
+export interface IUndo {
+  type: typeof UNDO;
+}
+
 export type TActions =
   | ISelectSquare
   | IMovePiece
@@ -81,4 +86,5 @@ export type TActions =
   | ISetSound
   | ISetMusic
   | ISurrender
-  | IMakeAIMove;
+  | IMakeAIMove
+  | IUndo;

@@ -1,6 +1,6 @@
-import { ShortMove, Square } from 'chess.js';
+import { Move, ShortMove, Square } from 'chess.js';
 import { generateAIMove } from '../AI/sendMessage';
-import { getPosition, getRandomSide } from '../utils';
+import { getIndex, getPosition, getRandomSide } from '../utils';
 import {
   audio,
   chess,
@@ -10,6 +10,7 @@ import {
   isReversed,
   startSettings,
   storeItem,
+  saveToStatistics,
 } from './setup';
 import {
   SELECT_SQUARE,
@@ -23,6 +24,7 @@ import {
   SURRENDER,
   SET_SOUND,
   SET_MUSIC,
+  UNDO,
 } from './chessActions/chessActionsTypes';
 import {
   DEFAULT_MODE,
@@ -63,6 +65,10 @@ const initialState = {
   isSurrender: false,
   music: DEFAULT_MUSIC,
   sound: DEFAULT_SOUND,
+  statistics: startSettings.statistics,
+  lastMove: null as [number, number] | null,
+  posibleMoves: null as number[] | null,
+  capturedMoves: null as number[] | null,
 };
 
 const chessReducer = (
@@ -79,7 +85,7 @@ const chessReducer = (
       const mode: TMode = getStoredItem('mode') || DEFAULT_MODE;
 
       const actualSide: TColor = side === 'random' ? getRandomSide() : side;
-      storeItem('actual-side', actualSide);
+      storeItem('actualSide', actualSide);
 
       if (mode === 'with-AI' && actualSide === 'b') {
         generateAIMove(chess.fen());
@@ -105,13 +111,36 @@ const chessReducer = (
         isGameOver: false,
         result: null,
         isSurrender: false,
+        lastMove: null,
+        posibleMoves: null,
+        capturedMoves: null,
       };
     }
 
     case SELECT_SQUARE: {
+      const { view, mode, actualSide, turn } = state;
+      const isReversedBoard = isReversed({ view, mode, actualSide, turn });
+      const moves = chess.moves({
+        square: getPosition(action.payload, isReversedBoard),
+        verbose: true,
+      });
+
+      const posibleMoves: number[] = [];
+      const capturedMoves: number[] = [];
+
+      moves.forEach((move: Move) => {
+        if (move.captured) {
+          capturedMoves.push(getIndex(move.to, isReversedBoard));
+        } else {
+          posibleMoves.push(getIndex(move.to, isReversedBoard));
+        }
+      });
+
       return {
         ...state,
         selectedSquare: action.payload,
+        posibleMoves,
+        capturedMoves,
       };
     }
 
@@ -122,16 +151,16 @@ const chessReducer = (
         return state;
       }
 
-      const isReversedBoard = isReversed({ view, turn, mode, actualSide });
+      let isReversedBoard = isReversed({ view, turn, mode, actualSide });
       const from = getPosition(selectedSquare, isReversedBoard) as Square;
       const to = getPosition(action.payload, isReversedBoard) as Square;
 
       const promotions = chess
-        .moves({ verbose: true })
+        .moves({ square: from, verbose: true })
         .filter((m: ShortMove) => m.promotion);
 
-      if (promotions.some((p: ShortMove) => p.from === from && p.to === to)) {
-        audio.move.play();
+      if (promotions.length > 0) {
+        audio.move.play().catch();
         const { color } = promotions[0];
         return {
           ...state,
@@ -147,7 +176,7 @@ const chessReducer = (
       storeItem('fen', chess.fen());
       const isGameOver = chess.game_over();
       if (state.sound) {
-        audio.move.play();
+        audio.move.play().catch();
       }
 
       if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
@@ -161,13 +190,24 @@ const chessReducer = (
         actualSide,
       };
 
+      if (view === 'auto-rotate' && mode === 'two-players') {
+        isReversedBoard = !isReversedBoard;
+      }
+
       return {
         ...state,
         selectedSquare: null,
         turn: chess.turn(),
         board: getBoard(boardProps),
         isGameOver,
-        result: isGameOver ? getResults() : null,
+        statistics: isGameOver ? getStoredItem('statistics') : state.statistics,
+        result: isGameOver ? getResults({ mode, actualSide }) : null,
+        lastMove: [
+          getIndex(from, isReversedBoard),
+          getIndex(to, isReversedBoard),
+        ],
+        posibleMoves: null,
+        capturedMoves: null,
       };
     }
 
@@ -179,6 +219,7 @@ const chessReducer = (
       const isGameOver = chess.game_over();
 
       const { mode, actualSide } = state;
+
       if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
         generateAIMove(chess.fen());
       }
@@ -190,6 +231,8 @@ const chessReducer = (
         actualSide,
       };
 
+      const isReversedBoard = isReversed(boardProps);
+
       return {
         ...state,
         selectedSquare: null,
@@ -197,7 +240,14 @@ const chessReducer = (
         turn: chess.turn(),
         board: getBoard(boardProps),
         isGameOver,
-        result: isGameOver ? getResults() : null,
+        statistics: isGameOver ? getStoredItem('statistics') : state.statistics,
+        result: isGameOver ? getResults({ mode, actualSide }) : null,
+        lastMove: [
+          getIndex(from, isReversedBoard),
+          getIndex(to, isReversedBoard),
+        ],
+        posibleMoves: null,
+        capturedMoves: null,
       };
     }
 
@@ -205,10 +255,13 @@ const chessReducer = (
       if (state.isSurrender) {
         return { ...state };
       }
+
+      chess.move(action.payload as ShortMove);
+
       chess.move(action.payload as ShortMove);
       storeItem('fen', chess.fen());
       if (state.sound) {
-        audio.move.play();
+        audio.move.play().catch();
       }
 
       const isGameOver = chess.game_over();
@@ -221,29 +274,104 @@ const chessReducer = (
         turn: chess.turn(),
       };
 
+      const { from, to } = action.payload;
+      let isReversedBoard = isReversed(boardProps);
+      if (view === 'auto-rotate' && mode === 'two-players') {
+        isReversedBoard = !isReversedBoard;
+      }
+
       return {
         ...state,
-        selectedSquare: null,
         promotion: null,
         turn: chess.turn(),
         board: getBoard(boardProps),
         isGameOver,
-        result: isGameOver ? getResults() : null,
+        statistics: isGameOver ? getStoredItem('statistics') : state.statistics,
+        result: isGameOver ? getResults({ mode, actualSide }) : null,
+        lastMove: [
+          getIndex(from, isReversedBoard),
+          getIndex(to, isReversedBoard),
+        ],
       };
     }
 
     case SURRENDER: {
       let result = 'WINNER - ';
+      let winner = '' as TColor | '-';
       if (state.mode === 'with-AI') {
-        result += state.actualSide === 'w' ? 'BLACK' : 'WHITE';
+        winner = state.actualSide === 'w' ? 'b' : 'w';
       } else {
-        result += state.turn === 'w' ? 'BLACK' : 'WHITE';
+        winner = state.turn === 'w' ? 'b' : 'w';
       }
+
+      if (winner === 'b') {
+        result += 'BLACK';
+      } else {
+        result += 'WHITE';
+      }
+
+      const side = state.mode === 'with-AI' ? state.actualSide : '-';
+      saveToStatistics({ mode: state.mode, side, winner });
+
       return {
         ...state,
         isSurrender: true,
         isGameOver: true,
         result,
+        statistics: getStoredItem('statistics'),
+      };
+    }
+
+    case UNDO: {
+      const { mode, isGameOver, promotion, turn, actualSide, view } = state;
+      if (isGameOver || promotion) {
+        return state;
+      }
+      if (mode === 'with-AI') {
+        if (chess.history().length === 1 && turn === actualSide) {
+          return state;
+        }
+        if (chess.history().length === 2 && turn === actualSide) {
+          return state;
+        }
+      }
+      const isLegal = chess.undo();
+      if (isLegal) {
+        audio.move.play().catch();
+      }
+
+      storeItem('fen', chess.fen());
+
+      const history = chess.history({ verbose: true });
+      const lastMove = history[history.length - 1];
+      const { from, to } = lastMove;
+
+      let isReversedBoard = isReversed({
+        mode,
+        view,
+        turn: chess.turn(),
+        actualSide,
+      });
+
+      if (view === 'auto-rotate' && mode === 'two-players') {
+        isReversedBoard = !isReversedBoard;
+      }
+
+      const boardProps = {
+        view,
+        turn: chess.turn(),
+        mode,
+        actualSide,
+        lastMove: [
+          getIndex(from, isReversedBoard),
+          getIndex(to, isReversedBoard),
+        ],
+      };
+
+      return {
+        ...state,
+        board: getBoard(boardProps),
+        turn: chess.turn(),
       };
     }
 
@@ -282,7 +410,7 @@ const chessReducer = (
     case SET_MUSIC: {
       const { music } = audio;
       if (music.paused && action.payload) {
-        music.play();
+        music.play().catch();
       } else if (!action.payload) {
         music.pause();
       }

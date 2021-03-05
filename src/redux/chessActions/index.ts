@@ -11,6 +11,7 @@ import {
   ISetView,
   IStartGame,
   ISurrender,
+  IUndo,
 } from './chessActions.types';
 import {
   MAKE_AI_MOVE,
@@ -24,6 +25,7 @@ import {
   SET_VIEW,
   START_GAME,
   SURRENDER,
+  UNDO,
 } from './chessActionsTypes';
 
 export const selectSquare = (idx: number): ISelectSquare => {
@@ -102,5 +104,11 @@ export const setSound = (value: number): ISetSound => {
 export const surrender = (): ISurrender => {
   return {
     type: SURRENDER,
+  };
+};
+
+export const undo = (): IUndo => {
+  return {
+    type: UNDO,
   };
 };

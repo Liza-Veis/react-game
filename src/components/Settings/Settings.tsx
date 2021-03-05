@@ -63,7 +63,7 @@ const Settings: React.FC<Props> = (props: Props) => {
 
   return (
     <div className="settings">
-      <NavLink className="btn settings__btn" to="/">
+      <NavLink className="btn btn--back" to="/">
         Back
       </NavLink>
 

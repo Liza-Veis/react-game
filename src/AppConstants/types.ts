@@ -23,4 +23,15 @@ export type TPiece = {
   type: string;
 };
 
+export type TStatisticsHeader = 'date' | 'mode' | 'side' | 'winner';
+
+export type TStatisticsField = {
+  date: string;
+  mode: TMode;
+  side: TColor | '-';
+  winner: TColor | '-';
+};
+
+export type TStatistics = TStatisticsField[];
+
 export type TBoard = (TPiece | null)[];

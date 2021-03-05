@@ -9,6 +9,8 @@ import {
   TBoard,
   TSide,
   TView,
+  TStatistics,
+  TStatisticsField,
 } from '../AppConstants';
 import { getRandomSide } from '../utils';
 import moveSound from '../audio/move.wav';
@@ -23,7 +25,11 @@ type TBoardProps = {
 
 const getStoredItem = (name: string): any => {
   if (name === 'fen') {
-    return localStorage.getItem('react-chess-fen');
+    return localStorage.getItem(`react-chess-${name}`);
+  }
+  if (name === 'statistics') {
+    const statisticsJSON = localStorage.getItem('react-chess-statistics');
+    return JSON.parse(statisticsJSON || '[]');
   }
   const settingsJSON = localStorage.getItem('react-chess-settings');
   if (!settingsJSON) {
@@ -41,6 +47,10 @@ const storeItem = <U, T>(name: U, value: T): void => {
     localStorage.setItem('react-chess-fen', value);
     return;
   }
+  if (name === 'statistics') {
+    localStorage.setItem('react-chess-statistics', JSON.stringify(value));
+    return;
+  }
   const settingsJSON = localStorage.getItem('react-chess-settings') || '{}';
   const settings = JSON.parse(settingsJSON);
   const newSettings = { ...settings, [name]: value };
@@ -53,6 +63,7 @@ const startSettings = {
   mode: (getStoredItem('mode') || DEFAULT_MODE) as TMode,
   side: (getStoredItem('side') || DEFAULT_SIDE) as TSide,
   actualSide: getStoredItem('actualSide') as TColor,
+  statistics: (getStoredItem('statistics') || []) as TStatistics,
 };
 
 if (!startSettings.actualSide) {
@@ -80,6 +91,26 @@ const isReversed = (props: TBoardProps): boolean => {
 
 const chess = new (Chess as any)(startSettings.fen);
 
+const saveToStatistics = (props: {
+  mode: TMode;
+  side: TColor | '-';
+  winner: TColor | '-';
+}): void => {
+  const statisticsField: TStatisticsField = {
+    ...props,
+    date: new Date().toLocaleString('ru-Ru', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    }),
+  };
+
+  const statistics = getStoredItem('statistics');
+  statistics.unshift(statisticsField);
+  storeItem('statistics', statistics.slice(0, 10));
+};
+
 const getBoard = (data: TBoardProps): TBoard => {
   const board = chess.board().flat();
   if (isReversed(data)) {
@@ -88,10 +119,14 @@ const getBoard = (data: TBoardProps): TBoard => {
   return board;
 };
 
-const getResults = (): string => {
+const getResults = (props: { mode: TMode; actualSide: TColor }): string => {
+  const side = props.mode === 'with-AI' ? props.actualSide : '-';
+
   if (chess.in_checkmate()) {
-    const winner = chess.turn() === 'w' ? 'BLACK' : 'WHITE';
-    return `CHECKMATE: WINNER - ${winner}`;
+    const winner = chess.turn() === 'w' ? 'b' : 'w';
+    saveToStatistics({ mode: props.mode, side, winner });
+
+    return `CHECKMATE: WINNER - ${winner === 'b' ? 'BLACK' : 'WHITE'}`;
   }
   if (chess.in_draw()) {
     let reason = '50 MOVES RULE';
@@ -102,8 +137,11 @@ const getResults = (): string => {
     } else if (chess.insufficient_material()) {
       reason = 'INSUFFICIENT MATERIAL';
     }
+    saveToStatistics({ mode: props.mode, side, winner: '-' });
     return `DRAW - ${reason}`;
   }
+
+  saveToStatistics({ mode: props.mode, side, winner: '-' });
   return 'UNKNOWN REASON';
 };
 
@@ -123,4 +161,5 @@ export {
   isReversed,
   getBoard,
   getResults,
+  saveToStatistics,
 };

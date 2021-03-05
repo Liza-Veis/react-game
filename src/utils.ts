@@ -20,6 +20,13 @@ export const getPosition = (idx: number, isReversed: boolean): string => {
   return `${file}${y + 1}`;
 };
 
+export const getIndex = (position: string, isReversed: boolean): number => {
+  const file = position[0];
+  const y = +position[1] - 1;
+  const x = 'abcdefgh'.indexOf(file);
+  return isReversed ? y * 8 + 7 - x : (7 - y) * 8 + x;
+};
+
 export const getRandomSide = (): 'w' | 'b' => {
   return 'wb'[Math.round(Math.random())] as 'w' | 'b';
 };

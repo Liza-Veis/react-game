@@ -26,7 +26,7 @@ const FullscreenSettings: React.FC<Props> = ({ fullscreen }: Props) => {
             type="radio"
             id="fullscreen"
             onClick={handleClick}
-            checked={isChecked}
+            defaultChecked={isChecked}
           />
           Enable
         </label>

@@ -20,7 +20,7 @@ const Home: React.FC<Props> = ({ startNewGame }: Props) => {
       <NavLink className="btn" to="/statistics">
         Statistics
       </NavLink>
-      <NavLink className="btn" to="/">
+      <NavLink className="btn" to="/hotkeys">
         Hot keys
       </NavLink>
     </div>
