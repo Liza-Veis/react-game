@@ -3,8 +3,8 @@ import { TSide } from '../../../AppConstants';
 import RadioInput from './inputs/RadioInput';
 
 type Props = {
-  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   side: TSide;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 const AiSettings: React.FC<Props> = ({ handleChange, side }: Props) => {

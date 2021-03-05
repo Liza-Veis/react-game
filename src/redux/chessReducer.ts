@@ -1,5 +1,5 @@
 import { Move, ShortMove, Square } from 'chess.js';
-import { generateAIMove } from '../AI/sendMessage';
+import { generateAIMove, setAISkillLevel } from '../AI/sendMessage';
 import { getIndex, getPosition, getRandomSide } from '../utils';
 import {
   audio,
@@ -25,8 +25,10 @@ import {
   SET_SOUND,
   SET_MUSIC,
   UNDO,
+  SET_AI_LEVEL,
 } from './chessActions/chessActionsTypes';
 import {
+  DEFAULT_AILEVEL,
   DEFAULT_MODE,
   DEFAULT_MUSIC,
   DEFAULT_SIDE,
@@ -69,6 +71,7 @@ const initialState = {
   lastMove: null as [number, number] | null,
   posibleMoves: null as number[] | null,
   capturedMoves: null as number[] | null,
+  AILevel: startSettings.AILevel,
 };
 
 const chessReducer = (
@@ -83,11 +86,16 @@ const chessReducer = (
       const side: TSide = getStoredItem('side') || DEFAULT_SIDE;
       const view: TView = getStoredItem('view') || DEFAULT_VIEW;
       const mode: TMode = getStoredItem('mode') || DEFAULT_MODE;
+      const AILevel: TMode = getStoredItem('AILevel') ?? DEFAULT_AILEVEL;
 
       const actualSide: TColor = side === 'random' ? getRandomSide() : side;
       storeItem('actualSide', actualSide);
+      storeItem('mode', mode);
+      storeItem('view', view);
+      storeItem('side', side);
+      storeItem('AILevel', AILevel);
 
-      if (mode === 'with-AI' && actualSide === 'b') {
+      if (mode === 'autoplay' || (mode === 'with-AI' && actualSide === 'b')) {
         generateAIMove(chess.fen());
       }
 
@@ -160,7 +168,7 @@ const chessReducer = (
         .filter((m: ShortMove) => m.promotion);
 
       if (promotions.length > 0) {
-        audio.move.play().catch();
+        audio.move.play().then().catch();
         const { color } = promotions[0];
         return {
           ...state,
@@ -170,13 +178,18 @@ const chessReducer = (
 
       const isLegal = chess.move({ from, to });
       if (!isLegal) {
-        return { ...state, selectedSquare: null };
+        return {
+          ...state,
+          selectedSquare: null,
+          posibleMoves: null,
+          capturedMoves: null,
+        };
       }
 
       storeItem('fen', chess.fen());
       const isGameOver = chess.game_over();
       if (state.sound) {
-        audio.move.play().catch();
+        audio.move.play().then().catch();
       }
 
       if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
@@ -220,7 +233,11 @@ const chessReducer = (
 
       const { mode, actualSide } = state;
 
-      if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
+      if (
+        !isGameOver &&
+        ((mode === 'with-AI' && chess.turn() !== actualSide) ||
+          mode === 'autoplay')
+      ) {
         generateAIMove(chess.fen());
       }
 
@@ -261,7 +278,7 @@ const chessReducer = (
       chess.move(action.payload as ShortMove);
       storeItem('fen', chess.fen());
       if (state.sound) {
-        audio.move.play().catch();
+        audio.move.play().then().catch();
       }
 
       const isGameOver = chess.game_over();
@@ -278,6 +295,10 @@ const chessReducer = (
       let isReversedBoard = isReversed(boardProps);
       if (view === 'auto-rotate' && mode === 'two-players') {
         isReversedBoard = !isReversedBoard;
+      }
+
+      if (!isGameOver && mode === 'autoplay') {
+        generateAIMove(chess.fen());
       }
 
       return {
@@ -297,17 +318,19 @@ const chessReducer = (
 
     case SURRENDER: {
       let result = 'WINNER - ';
-      let winner = '' as TColor | '-';
+      let winner = '-' as TColor | '-';
       if (state.mode === 'with-AI') {
         winner = state.actualSide === 'w' ? 'b' : 'w';
-      } else {
+      } else if (state.mode !== 'autoplay') {
         winner = state.turn === 'w' ? 'b' : 'w';
       }
 
       if (winner === 'b') {
         result += 'BLACK';
-      } else {
+      } else if (winner === 'w') {
         result += 'WHITE';
+      } else {
+        result = 'DRAW';
       }
 
       const side = state.mode === 'with-AI' ? state.actualSide : '-';
@@ -324,6 +347,9 @@ const chessReducer = (
 
     case UNDO: {
       const { mode, isGameOver, promotion, turn, actualSide, view } = state;
+      if (mode === 'autoplay') {
+        return { ...state };
+      }
       const history = chess.history({ verbose: true });
       if (history.length < 1) {
         return {
@@ -345,7 +371,7 @@ const chessReducer = (
       }
       const isLegal = chess.undo();
       if (isLegal) {
-        audio.move.play().catch();
+        audio.move.play().then().catch();
       }
 
       storeItem('fen', chess.fen());
@@ -411,10 +437,19 @@ const chessReducer = (
       };
     }
 
+    case SET_AI_LEVEL: {
+      storeItem('AILevel', action.payload.toString());
+      setAISkillLevel(action.payload);
+      return {
+        ...state,
+        AILevel: action.payload,
+      };
+    }
+
     case SET_MUSIC: {
       const { music } = audio;
       if (music.paused && action.payload) {
-        music.play().catch();
+        music.play().then().catch();
       } else if (!action.payload) {
         music.pause();
       }

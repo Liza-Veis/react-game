@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 import { TMode, TSide, TView } from '../../AppConstants';
 import {
+  setAILevel,
   setMode,
   setMusic,
   setSide,
@@ -13,6 +14,7 @@ import { TDispatch, TState } from '../../redux/types';
 import AiSettings from './components/AiSettings';
 import AudioSettings from './components/AudioSettings';
 import FullscreenSettings from './components/FullscreenSettings';
+import RangeInput from './components/inputs/RangeInput';
 import ModeSettings from './components/ModeSettings';
 import TwoPlayersSettings from './components/TwoPlayersSettings';
 
@@ -23,15 +25,17 @@ type Props = {
   sound: number;
   music: number;
   fullscreen: [boolean, () => void];
+  AILevel: number;
   setView: (value: TView) => void;
   setSide: (value: TSide) => void;
   setMode: (value: TMode) => void;
   setMusic: (value: number) => void;
   setSound: (value: number) => void;
+  setAILevel: (value: number) => void;
 };
 
 const Settings: React.FC<Props> = (props: Props) => {
-  const { side, view, mode, sound, music, fullscreen } = props;
+  const { side, view, mode, sound, music, fullscreen, AILevel } = props;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     switch (e.target.name) {
@@ -55,6 +59,10 @@ const Settings: React.FC<Props> = (props: Props) => {
         props.setSound(+e.target.value);
         break;
       }
+      case 'AILevel': {
+        props.setAILevel(+e.target.value);
+        break;
+      }
       default: {
         break;
       }
@@ -74,6 +82,14 @@ const Settings: React.FC<Props> = (props: Props) => {
       {mode === 'two-players' && (
         <TwoPlayersSettings handleChange={handleChange} view={view} />
       )}
+      {mode !== 'two-players' && (
+        <div className="settings__item">
+          <h3 className="settings__title">AI Level</h3>
+          <div className="settings__box" onChange={handleChange}>
+            <RangeInput name="AILevel" value={AILevel} label="" />
+          </div>
+        </div>
+      )}
 
       <AudioSettings handleChange={handleChange} music={music} sound={sound} />
       <FullscreenSettings fullscreen={fullscreen} />
@@ -88,6 +104,7 @@ const mapStateToProps = (state: TState) => {
     mode: state.mode,
     sound: state.sound,
     music: state.music,
+    AILevel: state.AILevel,
   };
 };
 
@@ -98,6 +115,7 @@ const mapDispatchToProps = (dispatch: TDispatch) => {
     setMode: (value: TMode) => dispatch(setMode(value)),
     setSound: (value: number) => dispatch(setSound(value)),
     setMusic: (value: number) => dispatch(setMusic(value)),
+    setAILevel: (value: number) => dispatch(setAILevel(value)),
   };
 };
 

@@ -10,3 +10,4 @@ export const SET_SIDE = 'SET_SIDE';
 export const SET_MODE = 'SET_MODE';
 export const SET_MUSIC = 'SET_MUSIC';
 export const SET_SOUND = 'SET_SOUND';
+export const SET_AI_LEVEL = 'SET_AILevel';

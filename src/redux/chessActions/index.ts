@@ -4,6 +4,7 @@ import {
   IMovePiece,
   IPromotePawn,
   ISelectSquare,
+  ISetAILevel,
   ISetMode,
   ISetMusic,
   ISetSide,
@@ -18,6 +19,7 @@ import {
   MOVE_PIECE,
   PROMOTE_PAWN,
   SELECT_SQUARE,
+  SET_AI_LEVEL,
   SET_MODE,
   SET_MUSIC,
   SET_SIDE,
@@ -110,5 +112,12 @@ export const surrender = (): ISurrender => {
 export const undo = (): IUndo => {
   return {
     type: UNDO,
+  };
+};
+
+export const setAILevel = (value: number): ISetAILevel => {
+  return {
+    type: SET_AI_LEVEL,
+    payload: value,
   };
 };

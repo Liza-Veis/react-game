@@ -62,6 +62,9 @@ const Board: React.FC<Props> = (props: Props) => {
   }, [isGameOver, isSurrender]);
 
   const handleClick = (piece: TPiece | null, idx: number) => {
+    if (mode === 'autoplay') {
+      return;
+    }
     if (selectedSquare === idx || (mode === 'with-AI' && turn !== side)) {
       return;
     }

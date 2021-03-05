@@ -1,5 +1,5 @@
 import * as Chess from 'chess.js';
-import { generateAIMove } from '../AI/sendMessage';
+import { generateAIMove, setAISkillLevel } from '../AI/sendMessage';
 import {
   DEFAULT_MODE,
   DEFAULT_SIDE,
@@ -11,6 +11,7 @@ import {
   TView,
   TStatistics,
   TStatisticsField,
+  DEFAULT_AILEVEL,
 } from '../AppConstants';
 import { getRandomSide } from '../utils';
 import moveSound from '../assets/audio/move.wav';
@@ -57,11 +58,13 @@ const storeItem = <U, T>(name: U, value: T): void => {
   localStorage.setItem('react-chess-settings', JSON.stringify(newSettings));
 };
 
+const AILevel = getStoredItem('AILevel');
 const startSettings = {
   fen: getStoredItem('fen') || undefined,
   view: (getStoredItem('view') || DEFAULT_VIEW) as TView,
   mode: (getStoredItem('mode') || DEFAULT_MODE) as TMode,
   side: (getStoredItem('side') || DEFAULT_SIDE) as TSide,
+  AILevel: (!AILevel && AILevel !== 0 ? DEFAULT_AILEVEL : AILevel) as number,
   actualSide: getStoredItem('actualSide') as TColor,
   statistics: (getStoredItem('statistics') || []) as TStatistics,
 };
@@ -70,6 +73,8 @@ if (!startSettings.actualSide) {
   const { side } = startSettings;
   startSettings.actualSide = side === 'random' ? getRandomSide() : side;
 }
+
+setAISkillLevel(startSettings.AILevel);
 
 const audio = {
   move: new Audio(moveSound),
@@ -80,6 +85,9 @@ audio.music.loop = true;
 
 const isReversed = (props: TBoardProps): boolean => {
   const { mode, view, turn, actualSide } = props;
+  if (mode === 'autoplay') {
+    return false;
+  }
   if (mode !== 'with-AI' && view === 'auto-rotate' && turn !== 'w') {
     return true;
   }
@@ -146,8 +154,14 @@ const getResults = (props: { mode: TMode; actualSide: TColor }): string => {
 };
 
 // make move after reload if ai turn
-if (window.location.pathname === '/game' && startSettings.mode === 'with-AI') {
-  if (chess.turn() !== startSettings.actualSide) {
+if (
+  window.location.pathname.includes('/game') &&
+  startSettings.mode !== 'two-players'
+) {
+  if (
+    startSettings.mode === 'autoplay' ||
+    chess.turn() !== startSettings.actualSide
+  ) {
     generateAIMove(chess.fen());
   }
 }

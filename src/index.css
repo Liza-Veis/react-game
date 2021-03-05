@@ -182,8 +182,9 @@ button {
 .promotion__body {
   padding: 15px 20px 20px;
   text-align: center;
-  background-color: var(--promotion-dark-color);
+  background-color: var(--bg-color);
   box-shadow: 0 0 20px rgb(0, 0, 0, 0.5);
+  color: var(--font-color-light);
 }
 
 .promotion__box {
@@ -193,7 +194,7 @@ button {
 
 .promotion__item {
   padding: 10px;
-  background-color: var(--promotion-light-color);
+  background-color: var(--promotion-dark-color);
 }
 
 .promotion__item img {

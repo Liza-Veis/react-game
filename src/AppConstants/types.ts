@@ -2,7 +2,7 @@ export type TColor = 'w' | 'b';
 
 export type TView = 'fixed' | 'auto-rotate';
 
-export type TMode = 'two-players' | 'with-AI';
+export type TMode = 'two-players' | 'with-AI' | 'autoplay';
 
 export type TSide = 'w' | 'b' | 'random';
 

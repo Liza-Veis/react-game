@@ -4,6 +4,7 @@ import {
   MOVE_PIECE,
   PROMOTE_PAWN,
   SELECT_SQUARE,
+  SET_AI_LEVEL,
   SET_MODE,
   SET_MUSIC,
   SET_SIDE,
@@ -71,6 +72,11 @@ export interface IMakeAIMove {
   };
 }
 
+export interface ISetAILevel {
+  type: typeof SET_AI_LEVEL;
+  payload: number;
+}
+
 export interface IUndo {
   type: typeof UNDO;
 }
@@ -87,4 +93,5 @@ export type TActions =
   | ISetMusic
   | ISurrender
   | IMakeAIMove
-  | IUndo;
+  | IUndo
+  | ISetAILevel;

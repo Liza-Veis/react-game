@@ -27,6 +27,13 @@ const ModeSettings: React.FC<Props> = (props: Props) => {
           checked={mode === 'two-players'}
           label="Two players"
         />
+
+        <RadioInput
+          name="mode"
+          value="autoplay"
+          checked={mode === 'autoplay'}
+          label="Autoplay"
+        />
       </div>
     </div>
   );

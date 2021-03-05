@@ -18,11 +18,11 @@ const Piece: React.FC<Props> = ({
 }: Props) => {
   const { type, color } = piece;
   const title = `${color}${type.toUpperCase()}`;
-  const img = `./assets/${title}.png`;
+  const img = `${process.env.PUBLIC_URL}/assets/${title}.png`;
   const selectedClass = isSelected ? 'selected' : '';
   let interactiveClass = '';
 
-  if (turn === color) {
+  if (turn === color && mode !== 'autoplay') {
     if (mode === 'with-AI') {
       if (side === color) {
         interactiveClass = 'interactive';
