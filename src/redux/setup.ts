@@ -155,7 +155,7 @@ const getResults = (props: { mode: TMode; actualSide: TColor }): string => {
 
 // make move after reload if ai turn
 if (
-  window.location.pathname.includes('/game') &&
+  window.location.hash.endsWith('/game') &&
   startSettings.mode !== 'two-players'
 ) {
   if (

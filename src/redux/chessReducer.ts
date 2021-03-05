@@ -42,12 +42,6 @@ import {
 } from '../AppConstants';
 import { TActions } from './chessActions/chessActions.types';
 
-// const promotion = 'rnb2bnr/pppPkppp/8/4p3/7q/8/PPPP1PPP/RNBQKBNR w KQ - 1 5';
-// const stalemate = '4k3/4P3/8/4K3/8/8/8/8 w - - 0 78';
-// const material = 'k7/8/n7/8/8/8/8/7K b - - 0 1';
-// const checkmate =
-//   'rnb1kbnr/pppp1ppp/8/4p1q1/5PP1/8/PPPPP2P/RNBQKBNR b KQkq - 1 3';
-
 const initialState = {
   board: getBoard({
     view: startSettings.view,
@@ -168,7 +162,8 @@ const chessReducer = (
         .filter((m: ShortMove) => m.promotion);
 
       if (promotions.length > 0) {
-        audio.move.play().then().catch();
+        const promise = audio.move.play();
+        promise.then().catch();
         const { color } = promotions[0];
         return {
           ...state,
@@ -189,7 +184,8 @@ const chessReducer = (
       storeItem('fen', chess.fen());
       const isGameOver = chess.game_over();
       if (state.sound) {
-        audio.move.play().then().catch();
+        const promise = audio.move.play();
+        promise.then().catch();
       }
 
       if (!isGameOver && mode === 'with-AI' && chess.turn() !== actualSide) {
@@ -278,7 +274,8 @@ const chessReducer = (
       chess.move(action.payload as ShortMove);
       storeItem('fen', chess.fen());
       if (state.sound) {
-        audio.move.play().then().catch();
+        const promise = audio.move.play();
+        promise.then().catch();
       }
 
       const isGameOver = chess.game_over();
@@ -347,31 +344,43 @@ const chessReducer = (
 
     case UNDO: {
       const { mode, isGameOver, promotion, turn, actualSide, view } = state;
+      const resetSel = {
+        posibleMoves: null,
+        capturedMoves: null,
+        selectedSquare: null,
+      };
       if (mode === 'autoplay') {
-        return { ...state };
+        return {
+          ...state,
+          ...resetSel,
+        };
       }
       const history = chess.history({ verbose: true });
       if (history.length < 1) {
         return {
           ...state,
           lastMove: null,
-          posibleMoves: null,
-          capturedMoves: null,
+          ...resetSel,
         };
       }
       if (isGameOver || promotion) {
         return {
           ...state,
+          ...resetSel,
         };
       }
       if (mode === 'with-AI') {
         if (history.length <= 2 && turn === actualSide) {
-          return { ...state };
+          return {
+            ...state,
+            ...resetSel,
+          };
         }
       }
       const isLegal = chess.undo();
       if (isLegal) {
-        audio.move.play().then().catch();
+        const promise = audio.move.play();
+        promise.then().catch();
       }
 
       storeItem('fen', chess.fen());
@@ -402,6 +411,7 @@ const chessReducer = (
               getIndex(lastMove.to, isReversedBoard),
             ]
           : null,
+        ...resetSel,
       };
     }
 
@@ -449,7 +459,8 @@ const chessReducer = (
     case SET_MUSIC: {
       const { music } = audio;
       if (music.paused && action.payload) {
-        music.play().then().catch();
+        const promise = music.play();
+        promise.then().catch();
       } else if (!action.payload) {
         music.pause();
       }
