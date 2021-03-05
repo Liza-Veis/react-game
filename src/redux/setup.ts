@@ -13,8 +13,8 @@ import {
   TStatisticsField,
 } from '../AppConstants';
 import { getRandomSide } from '../utils';
-import moveSound from '../audio/move.wav';
-import music from '../audio/music.mp3';
+import moveSound from '../assets/audio/move.wav';
+import music from '../assets/audio/music.mp3';
 
 type TBoardProps = {
   view: TView;

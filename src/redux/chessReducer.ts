@@ -324,15 +324,23 @@ const chessReducer = (
 
     case UNDO: {
       const { mode, isGameOver, promotion, turn, actualSide, view } = state;
+      const history = chess.history({ verbose: true });
+      if (history.length < 1) {
+        return {
+          ...state,
+          lastMove: null,
+          posibleMoves: null,
+          capturedMoves: null,
+        };
+      }
       if (isGameOver || promotion) {
-        return state;
+        return {
+          ...state,
+        };
       }
       if (mode === 'with-AI') {
-        if (chess.history().length === 1 && turn === actualSide) {
-          return state;
-        }
-        if (chess.history().length === 2 && turn === actualSide) {
-          return state;
+        if (history.length <= 2 && turn === actualSide) {
+          return { ...state };
         }
       }
       const isLegal = chess.undo();
@@ -342,36 +350,32 @@ const chessReducer = (
 
       storeItem('fen', chess.fen());
 
-      const history = chess.history({ verbose: true });
-      const lastMove = history[history.length - 1];
-      const { from, to } = lastMove;
+      const lastMove = history.length >= 2 ? history[history.length - 2] : null;
 
-      let isReversedBoard = isReversed({
+      const isReversedBoard = isReversed({
         mode,
         view,
         turn: chess.turn(),
         actualSide,
       });
 
-      if (view === 'auto-rotate' && mode === 'two-players') {
-        isReversedBoard = !isReversedBoard;
-      }
-
       const boardProps = {
         view,
         turn: chess.turn(),
         mode,
         actualSide,
-        lastMove: [
-          getIndex(from, isReversedBoard),
-          getIndex(to, isReversedBoard),
-        ],
       };
 
       return {
         ...state,
         board: getBoard(boardProps),
         turn: chess.turn(),
+        lastMove: lastMove
+          ? [
+              getIndex(lastMove.from, isReversedBoard),
+              getIndex(lastMove.to, isReversedBoard),
+            ]
+          : null,
       };
     }
 
