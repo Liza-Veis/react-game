@@ -33,7 +33,10 @@ const Promotion: React.FC<Props> = ({ data, promote }: Props) => {
                 className="promotion__item interactive"
                 onClick={() => handleClick(piece)}
               >
-                <img src={`./assets/${title}.png`} alt={title} />
+                <img
+                  src={`${process.env.PUBLIC_URL}/assets/${title}.png`}
+                  alt={title}
+                />
               </div>
             );
           })}
